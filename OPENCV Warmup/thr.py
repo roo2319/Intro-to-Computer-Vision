@@ -12,7 +12,7 @@ def main():
 
     cv2.imshow("im",gray_im)
     cv2.waitKey(0)
-    cv2.imwrite("mandrillThreshold.jpg",gray_im)
+    cv2.imwrite("thr.jpg",gray_im)
 
 if __name__ == "__main__":
     main()
