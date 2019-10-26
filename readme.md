@@ -1,3 +1,2 @@
-# what
-folders
-AAAAAAAAAA
+# COMS30121
+Labs and coursework
