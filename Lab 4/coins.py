@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import math
+from sklearn import preprocessing
 
 def convolution(xs,ys):
     result=0
@@ -56,18 +57,55 @@ def findGradient(matrixA, matrixB):
             gradient[i,j]=math.atan2(matrixB[i,j], matrixA[i,j])
     return gradient
 
+def thresholdImage(image,thershold):
+    for i in range(len(image)):
+        for j in range(len(image[0])):
+            if image[i,j]>thershold:
+                image[i,j]=255
+            else:
+                image[i,j]=0
+    return image
+
+def calculateHoughSpace(image,angle,threshold):
+    hough=np.zeros((len(image)+100,len(image[0])+100,200))
+    for i in range(len(image)):
+        for j in range(len(image[0])):
+            if image[i,j]==255:
+                for r in range(10,100):
+                    x1=int(j+r*math.cos(angle[i,j]))
+                    x2=int(j-r*math.cos(angle[i,j]))
+                    y1=int(i+r*math.sin(angle[i,j]))
+                    y2=int(i-r*math.sin(angle[i,j]))
+                    hough[y1,x1,r]+=1
+                    hough[y1,x2,r]+=1
+                    hough[y2,x1,r]+=1
+                    hough[y2,x2,r]+=1
+    for i in range(len(hough)):
+        for j in range(len(hough[0])):
+            for r in range(len(hough[0,0])):
+                if hough[i,j,r]<threshold:
+                    hough[i,j,r]=0
+    return np.sum(hough,2)
+
 image = cv2.imread('coins1.png',0)
+image = cv2.medianBlur(image, 5)
 kernelX=np.array(([-1,0,1],[-2,0,2],[-1,0,1]))
 alteredImageX=cv2.convertScaleAbs(applyKernel(kernelX,image))
-cv2.imshow("edgedetectionX",alteredImageX)
-cv2.waitKey(0)
+# cv2.imshow("edgedetectionX",alteredImageX)
+# cv2.waitKey(0)
 kernelY=np.array(([-1,-2,-1],[0,0,0],[1,2,1]))
 alteredImageY=cv2.convertScaleAbs(applyKernel(kernelY,image))
-cv2.imshow("edgedetectionY",alteredImageY)
-cv2.waitKey(0)
+# cv2.imshow("edgedetectionY",alteredImageY)
+# cv2.waitKey(0)
 magnitude=findMagnitude(alteredImageX,alteredImageY)
 cv2.imshow("edgedetectionMagnitude",magnitude)
 cv2.waitKey(0)
-gradient=findGradient(alteredImageX,alteredImageY)
-cv2.imshow("edgedetectionGradient",gradient)
+# gradient=findGradient(alteredImageX,alteredImageY)
+# # cv2.imshow("edgedetectionGradient",gradient)
+# # cv2.waitKey(0)
+thresholdedImage=thresholdImage(magnitude,170)
+cv2.imshow("edgedetectionGradientThresholded",thresholdedImage)
 cv2.waitKey(0)
+# hough=calculateHoughSpace(thresholdedImage,gradient,10)
+# cv2.imshow("hough",hough)
+# cv2.waitKey(0)
