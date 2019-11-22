@@ -8,47 +8,35 @@ import numpy as np
 face_cascade_name = "frontalface.xml"
 face_cascade = cv2.CascadeClassifier()
 
-#magic (yes Ruairi I will add more comments to this function)
-def checkRectangles(facesA, facesB, percentile):
+#Calculates intersection over union of the two rectangles and, if it is above a certain threshold, classifies them as correctly identified
+def findUnionAndIntersection(facesA, facesB, percentile):
     correctFacesA=[]
     correctFacesB=[]
     facesSetA=set(tuple(i) for i in facesA)
     facesSetB=set(tuple(j) for j in facesB)
     for faceB in facesSetB.symmetric_difference(correctFacesB):
         for faceA in facesSetA.symmetric_difference(correctFacesA):
-            pixelCount=0
-            correctPixelCount=0
+            intersectingPixelsCount=0
+            faceASize=faceA[2]*faceA[3]
+            faceBSize=faceB[2]*faceB[3]
             for i in range(faceB[0], faceB[0]+faceB[2]):
                 for j in range(faceB[1], faceB[1]+faceB[3]):
                     if (i>faceA[0] and i<faceA[0]+faceA[2] and j>faceA[1] and j<faceA[1]+faceA[3]):
-                        correctPixelCount+=1
-                    pixelCount+=1
-            if (correctPixelCount/pixelCount>=percentile):
+                        intersectingPixelsCount+=1
+            if (intersectingPixelsCount/(faceASize+faceBSize-intersectingPixelsCount)>percentile):
                 correctFacesA.append(faceA)
                 correctFacesB.append(faceB)
                 break
     return (correctFacesA, correctFacesB)
 
-def calculateStats(faces, manualFaces, percentile):
-    #checks ground truth faces against detected faces, 
-    #returns detected faces that include at least (percentile) of a ground truth face, 
-    #and ground truth faces at least (percentile) of which is included in detected faces
-    a = checkRectangles(faces, manualFaces, percentile)  
-    #checks detected faces against ground truth faces,
-    #returns ground truth faces that include at least (percentile) of a detected face,
-    #and detected faces at least (percentile) of which is included in ground truth faces
-    b = checkRectangles(manualFaces, faces, percentile)
-    #the ground truth faces that include at least (percentile) of a detected face 
-    #and that at least (percentile) of which are included in a detected face are the true positives
-    tp= [value for value in a[1] if value in b[0]]
-    #the true positive rate/recall is the true positives divided by the valid faces
-    tpr=len(tp)/len(manualFaces)
-    print(tpr)
+def calculateF1andTPR(faces, groundTruth, percentile):
+    tp= findUnionAndIntersection(faces,groundTruth,percentile)[1]
+    #true positive rate is true positives over all valid faces
+    tpr=len(tp)/len(groundTruth)
     #precision is true positives over all detected
     precision= len(tp)/len(faces)
-    print(precision)
     f1=2*precision*tpr/(precision+tpr)
-    return f1
+    return f1,tpr
 
 
 def detectAndDisplay(frame):
@@ -64,7 +52,7 @@ def detectAndDisplay(frame):
     for (x,y,width,height) in faces:
         frame = cv2.rectangle(frame, (x,y), (x + width, y + height), ( 0, 255, 0 ), 2)
     # Ground truth
-    manualFaces={
+    groundTruth={
         "dart4.jpg": [(345,100,125,170)],
         "dart5.jpg": [(60,135,60,70),(55,245,60,70),(190,210,60,70),(250,165,55,60),(295,237,50,70), (380,190,60,60), (430,230,55,70), (510,180,60,60), (560,240,55,75), (650,185,55,65), (680,240,50,70)],
         "dart13.jpg": [(420,120,110,140)],
@@ -72,12 +60,12 @@ def detectAndDisplay(frame):
         "dart15.jpg": [(70,125,60,85),(375,110,50,75),(540,125,60,80)]
         }
     # If we have ground truth for this file
-    if (sys.argv[1] in manualFaces):
+    if (sys.argv[1] in groundTruth):
         #5. Draw red boxes around ground truth faces
-        for (x,y,width,height) in manualFaces[sys.argv[1]]:
+        for (x,y,width,height) in groundTruth[sys.argv[1]]:
             frame = cv2.rectangle(frame, (x,y), (x + width, y + height), ( 0, 0, 255 ), 2)
-        # 6. Calculate TPR
-        print(calculateStats(faces, manualFaces[sys.argv[1]], 0.6))
+        # 6. Calculate F1 and TPR
+        print(calculateF1andTPR(faces, groundTruth[sys.argv[1]], 0.6))
     cv2.imshow('Capture - Face detection', frame)
     cv2.waitKey(0)
 
