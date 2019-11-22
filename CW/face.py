@@ -8,35 +8,7 @@ import numpy as np
 face_cascade_name = "frontalface.xml"
 face_cascade = cv2.CascadeClassifier()
 
-#Calculates intersection over union of the two rectangles and, if it is above a certain threshold, classifies them as correctly identified
-def findUnionAndIntersection(facesA, facesB, percentile):
-    correctFacesA=[]
-    correctFacesB=[]
-    facesSetA=set(tuple(i) for i in facesA)
-    facesSetB=set(tuple(j) for j in facesB)
-    for faceB in facesSetB.symmetric_difference(correctFacesB):
-        for faceA in facesSetA.symmetric_difference(correctFacesA):
-            intersectingPixelsCount=0
-            faceASize=faceA[2]*faceA[3]
-            faceBSize=faceB[2]*faceB[3]
-            for i in range(faceB[0], faceB[0]+faceB[2]):
-                for j in range(faceB[1], faceB[1]+faceB[3]):
-                    if (i>faceA[0] and i<faceA[0]+faceA[2] and j>faceA[1] and j<faceA[1]+faceA[3]):
-                        intersectingPixelsCount+=1
-            if (intersectingPixelsCount/(faceASize+faceBSize-intersectingPixelsCount)>percentile):
-                correctFacesA.append(faceA)
-                correctFacesB.append(faceB)
-                break
-    return (correctFacesA, correctFacesB)
 
-def calculateF1andTPR(faces, groundTruth, percentile):
-    tp= findUnionAndIntersection(faces,groundTruth,percentile)[1]
-    #true positive rate is true positives over all valid faces
-    tpr=len(tp)/len(groundTruth)
-    #precision is true positives over all detected
-    precision= len(tp)/len(faces)
-    f1=2*precision*tpr/(precision+tpr)
-    return f1,tpr
 
 
 def detectAndDisplay(frame):
