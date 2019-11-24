@@ -5,6 +5,8 @@ from sklearn import preprocessing
 import matplotlib.pyplot as plt
 from skimage import data, color
 from skimage.draw import circle_perimeter
+from scipy import ndimage
+import struct
 
 def convolution(xs,ys):
     result=0
@@ -69,57 +71,80 @@ def thresholdImage(image,thershold):
                 image[i,j]=0
     return image
 
-def calculateHoughSpace(image,angle,threshold):
-    hough=np.zeros((len(image)+100,len(image[0])+100,200))
+def calculateMean(image):
+    return(ndimage.measurements.center_of_mass(image))
+
+def calculateGeneralisedHoughSpace(image, gradient,threshold):
+    mean=calculateMean(image)
+    xRef=int(mean[0])
+    yRef=int(mean[1])
+    accumulator=np.array(360)
+
+def distance(a,b):
+    return int(math.sqrt(a*a+b*b))
+
+#how is there no good library function for this?
+def mod(a,b):
+    while a<0:
+        a+=b
+    while a>=b:
+        a-=b
+    return a
+
+def calculateLineHoughSpace(image,gradient,threshold):
+    print(2*distance(len(image),len(image[0])))
+    hough=np.zeros(2*(distance(len(image),len(image[0])),180))
     for i in range(len(image)):
         for j in range(len(image[0])):
             if image[i,j]==255:
-                for r in range(10,100):
-                    x1=int(j+r*math.cos(angle[i,j]))
-                    x2=int(j-r*math.cos(angle[i,j]))
-                    y1=int(i+r*math.sin(angle[i,j]))
-                    y2=int(i-r*math.sin(angle[i,j]))
-                    hough[y1,x1,r]+=1
-                    hough[y1,x2,r]+=1
-                    hough[y2,x1,r]+=1
-                    hough[y2,x2,r]+=1
+                for theta in range(mod(int(math.degrees(gradient[i,j])-10),180), mod(int(math.degrees(gradient[i,j])+10),180)):
+                    r=int(j*math.cos(math.radians(theta))+i*math.sin(math.radians(theta)))
+                    print((len(hough)/2 + r))
+                    hough[(len(hough)/2 + r),int(theta)]+=1
     for i in range(len(hough)):
         for j in range(len(hough[0])):
-            for r in range(len(hough[0,0])):
-                if hough[i,j,r]<threshold:
-                    hough[i,j,r]=0
+            if hough[i,j]<threshold:
+                hough[i,j]=0
+            else:
+                hough[i,j]=255
     return hough
 
-image = cv2.imread('dart1.jpg',0)
-image = cv2.medianBlur(image, 5)
-kernelX=np.array(([-1,0,1],[-2,0,2],[-1,0,1]))
-alteredImageX=applyKernel(kernelX,image)
-# alteredImageX=np.interp(alteredImageX, (alteredImageX.min(), alteredImageX.max()), (0, 1))
-# cv2.imshow("edgedetectionX",alteredImageX)
-# cv2.waitKey(0)
-kernelY=np.array(([-1,-2,-1],[0,0,0],[1,2,1]))
-alteredImageY=applyKernel(kernelY,image)
-# alteredImageY=np.interp(alteredImageY, (alteredImageY.min(), alteredImageY.max()), (0, 1))
-# cv2.imshow("edgedetectionY",alteredImageY)
-# cv2.waitKey(0)
-magnitude=findMagnitude(alteredImageX,alteredImageY)
-magnitude=np.interp(magnitude, (magnitude.min(), magnitude.max()), (0, 1))
-cv2.imshow("edgedetectionMagnitude",magnitude)
-cv2.waitKey(0)
-gradient=findGradient(alteredImageX,alteredImageY)
-# gradient=np.interp(gradient, (gradient.min(), gradient.max()), (0, 1))
-cv2.imshow("edgedetectionGradient",gradient)
-cv2.waitKey(0)
-thresholdedImage=thresholdImage(magnitude,0.2)
-cv2.imshow("edgedetectionGradientThresholded",thresholdedImage)
-cv2.waitKey(0)
-hough=calculateHoughSpace(thresholdedImage,gradient,20)
-# cv2.imshow("hough",hough)
-# cv2.waitKey(0)
-for i in range (len(hough)):
-    for j in range (len(hough[0])):
-        for k in range (len(hough[0][0])):
-            if (hough[i,j,k]>0):
-                cv2.circle(image,(j,i),k,(255),1)
-cv2.imshow("final", image)
-cv2.waitKey(0)
+def main():
+    print(struct.calcsize("P") * 8)
+    image = cv2.imread('line.png',0)
+    image = cv2.medianBlur(image, 5)
+    kernelX=np.array(([-1,0,1],[-2,0,2],[-1,0,1]))
+    alteredImageX=applyKernel(kernelX,image)
+    kernelY=np.array(([-1,-2,-1],[0,0,0],[1,2,1]))
+    alteredImageY=applyKernel(kernelY,image)
+    magnitude=findMagnitude(alteredImageX,alteredImageY)
+    magnitude=np.interp(magnitude, (magnitude.min(), magnitude.max()), (0, 1))
+    gradient=findGradient(alteredImageX,alteredImageY)
+    print(gradient.min())
+    print(gradient.max())
+    thresholdedImage=thresholdImage(magnitude,0.2)
+    cv2.imshow("edgedetectionGradientThresholded",thresholdedImage)
+    cv2.waitKey(0)
+    hough=calculateLineHoughSpace(thresholdedImage,gradient,10)
+    cv2.imshow("linehough",hough)
+    cv2.waitKey(0)
+    for i in range(len(hough)):
+        for j in range(len(hough[0])):
+            if hough[i,j]==255:
+                rho=i
+                theta=math.radians(j)
+                a = np.cos(theta)
+                b = np.sin(theta)
+                x0 = a*rho
+                y0 = b*rho
+                x1 = int(x0 + 1000*(-b))
+                y1 = int(y0 + 1000*(a))
+                x2 = int(x0 - 1000*(-b))
+                y2 = int(y0 - 1000*(a))
+                cv2.line(image,(x1,y1),(x2,y2),(255),2)
+    print("got here?")
+    cv2.imshow('houghlines3',image)
+    cv2.waitKey(0)
+
+if __name__ == "__main__":
+    main()
