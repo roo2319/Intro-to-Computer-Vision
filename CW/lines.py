@@ -49,14 +49,17 @@ def sobel(im):
     # cv2.waitKey(0)
 
 
-def hough(im, angles, origim):
-    # Distance, angle
-    width, height = im.shape
+def hough(im, angles):
+
+    grey = cv2.GaussianBlur(cv2.cvtColor(im, cv2.COLOR_BGR2GRAY), (3, 3), 0)
+
+    width, height = grey.shape
     diagonal = int(np.ceil(np.sqrt(width*width + height*height)))
     houghSpace = np.zeros((2*diagonal, angles))
 
-    mag, ang = sobel(im)
+    mag, ang = sobel(grey)
 
+    # position in hough space represents location in these lists
     p = range(-diagonal, diagonal)
     t = [x*np.pi/angles for x in range(angles)]
 
@@ -74,6 +77,7 @@ def hough(im, angles, origim):
     print("Thresholding")
     for p_index in range(houghSpace.shape[0]):
         for t_index in range(houghSpace.shape[1]):
+            # Hardcoded threshold, Play around (Maybe top 10?)
             if houghSpace[p_index, t_index] < 100:
                 houghSpace[p_index, t_index] = 0
     cv2.imshow("HOG", houghSpace)
@@ -83,27 +87,32 @@ def hough(im, angles, origim):
     for p_index in range(houghSpace.shape[0]):
         for t_index in range(houghSpace.shape[1]):
             if houghSpace[p_index, t_index] > 0:
+
                 angle = t[t_index]
                 distance = p[p_index]
+
                 a = np.cos(angle)
                 b = np.sin(angle)
+
+                # Find base coordinates
                 x0 = np.cos(angle) * distance
                 y0 = np.sin(angle) * distance
+
+                # Generate endpoints, to create a long line
                 x1 = int(x0 + 1000*(-b))
                 y1 = int(y0 + 1000*(a))
                 x2 = int(x0 - 1000*(-b))
                 y2 = int(y0 - 1000*(a))
 
-                cv2.line(origim, (x1, y1), (x2, y2), (255, 0, 0), 2)
+                cv2.line(im, (x1, y1), (x2, y2), (255, 0, 0), 2)
 
-    cv2.imshow("overlay", origim)
+    cv2.imshow("overlay", im)
     cv2.waitKey(0)
 
 
 def main():
-    origim = cv2.imread("line.png")
-    im = cv2.GaussianBlur(cv2.cvtColor(origim, cv2.COLOR_BGR2GRAY), (3, 3), 0)
-    houghSpace = hough(im, 16, origim)
+    im = cv2.imread("line.png")
+    houghSpace = hough(im, 16)
 
 
 if __name__ == "__main__":
