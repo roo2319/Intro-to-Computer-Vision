@@ -1,10 +1,6 @@
 import numpy as np
 import cv2
 import math
-from sklearn import preprocessing
-import matplotlib.pyplot as plt
-from skimage import data, color
-from skimage.draw import circle_perimeter
 from scipy import ndimage
 import struct
 
@@ -83,35 +79,13 @@ def calculateGeneralisedHoughSpace(image, gradient,threshold):
 def distance(a,b):
     return int(math.sqrt(a*a+b*b))
 
-#how is there no good library function for this?
-def mod(a,b):
-    while a<0:
-        a+=b
-    while a>=b:
-        a-=b
-    return a
+def putNumberInRange(x,a,b):
+    while (x<a):
+        x+=a
+    while (x>=b):
+        x
 
-def calculateLineHoughSpace(image,gradient,threshold):
-    print(2*distance(len(image),len(image[0])))
-    hough=np.zeros(2*(distance(len(image),len(image[0])),180))
-    for i in range(len(image)):
-        for j in range(len(image[0])):
-            if image[i,j]==255:
-                for theta in range(mod(int(math.degrees(gradient[i,j])-10),180), mod(int(math.degrees(gradient[i,j])+10),180)):
-                    r=int(j*math.cos(math.radians(theta))+i*math.sin(math.radians(theta)))
-                    print((len(hough)/2 + r))
-                    hough[(len(hough)/2 + r),int(theta)]+=1
-    for i in range(len(hough)):
-        for j in range(len(hough[0])):
-            if hough[i,j]<threshold:
-                hough[i,j]=0
-            else:
-                hough[i,j]=255
-    return hough
-
-def main():
-    print(struct.calcsize("P") * 8)
-    image = cv2.imread('line.png',0)
+def sobel(image):
     image = cv2.medianBlur(image, 5)
     kernelX=np.array(([-1,0,1],[-2,0,2],[-1,0,1]))
     alteredImageX=applyKernel(kernelX,image)
@@ -120,31 +94,76 @@ def main():
     magnitude=findMagnitude(alteredImageX,alteredImageY)
     magnitude=np.interp(magnitude, (magnitude.min(), magnitude.max()), (0, 1))
     gradient=findGradient(alteredImageX,alteredImageY)
-    print(gradient.min())
-    print(gradient.max())
     thresholdedImage=thresholdImage(magnitude,0.2)
     cv2.imshow("edgedetectionGradientThresholded",thresholdedImage)
     cv2.waitKey(0)
-    hough=calculateLineHoughSpace(thresholdedImage,gradient,10)
-    cv2.imshow("linehough",hough)
+    return (magnitude,gradient)
+
+def hough(im, angles):
+
+    width, height = im.shape
+    diagonal = int(np.ceil(np.sqrt(width*width + height*height)))
+    houghSpace = np.zeros((2*diagonal, 360))
+
+    mag, ang = sobel(im)
+
+    # position in hough space represents location in these lists
+    p = range(-diagonal, diagonal)
+
+    for y in range(im.shape[0]):
+        for x in range(im.shape[1]):
+            if mag[y, x] != 0:
+                t = [angleD+ang[y][x] for angleD in np.arange(-0.1,0.1,0.02)]
+                for t_index in range(len(t)):
+                    angle = t[t_index]
+                    # As range from -diagonal to diagonal,
+                    # Add diagonal so range goes from 0 to 2 * diagonal
+                    p_index = int(x * np.cos(angle) + y *
+                                  np.sin(angle)) + diagonal
+                    houghSpace[p_index, int(math.degrees(angle))%360] += 1
+
+    print("Thresholding")
+    for p_index in range(houghSpace.shape[0]):
+        for t_index in range(houghSpace.shape[1]):
+            # Hardcoded threshold, Play around (Maybe top 10?)
+            if houghSpace[p_index, t_index] < 20:
+                houghSpace[p_index, t_index] = 0
+                
+            else:
+                print(p_index)
+                print(t_index)
+    cv2.imshow("HOG", houghSpace)
     cv2.waitKey(0)
-    for i in range(len(hough)):
-        for j in range(len(hough[0])):
-            if hough[i,j]==255:
-                rho=i
-                theta=math.radians(j)
-                a = np.cos(theta)
-                b = np.sin(theta)
-                x0 = a*rho
-                y0 = b*rho
+
+    print("Overlaying")
+    for p_index in range(houghSpace.shape[0]):
+        for t_index in range(houghSpace.shape[1]):
+            if houghSpace[p_index, t_index] > 0:
+                # print("start")
+                angle = math.radians(t_index)
+                # print(math.degrees(angle))
+                distance = p_index-diagonal
+                # print(distance)
+
+                a = np.cos(angle)
+                b = np.sin(angle)
+                # Find base coordinates
+                x0 = np.cos(angle) * distance
+                y0 = np.sin(angle) * distance
+
+                # Generate endpoints, to create a long line
                 x1 = int(x0 + 1000*(-b))
                 y1 = int(y0 + 1000*(a))
                 x2 = int(x0 - 1000*(-b))
                 y2 = int(y0 - 1000*(a))
-                cv2.line(image,(x1,y1),(x2,y2),(255),2)
-    print("got here?")
-    cv2.imshow('houghlines3',image)
+                cv2.line(im, (x1, y1), (x2, y2), (255, 0, 0), 1)
+
+    cv2.imshow("overlay", im)
     cv2.waitKey(0)
+
+def main(): 
+    image = cv2.imread('dart2.jpg',0)
+    hough(image,16)
 
 if __name__ == "__main__":
     main()
