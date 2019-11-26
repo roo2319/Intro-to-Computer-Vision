@@ -3,57 +3,62 @@ import os
 import sys
 
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
 
-face_cascade_name = "frontalface.xml"
+cascade_name = ""
 face_cascade = cv2.CascadeClassifier()
 
-#Calculates intersection over union of the two rectangles and, if it is above a certain threshold, classifies them as correctly identified
+'''
+Calculates intersection over union of the two rectangles and, if it is above a certain threshold, classifies them as correctly identified
+facesX :: [(x,y,width,height)]
+percentile
+'''
+
+
 def findUnionAndIntersection(facesA, facesB, percentile):
-    correctFacesA=[]
-    correctFacesB=[]
-    facesSetA=set(tuple(i) for i in facesA)
-    facesSetB=set(tuple(j) for j in facesB)
+    correctFacesA = []
+    correctFacesB = []
+    facesSetA = set(tuple(i) for i in facesA)
+    facesSetB = set(tuple(j) for j in facesB)
     for faceB in facesSetB.symmetric_difference(correctFacesB):
         for faceA in facesSetA.symmetric_difference(correctFacesA):
-            intersectingPixelsCount=0
-            faceASize=faceA[2]*faceA[3]
-            faceBSize=faceB[2]*faceB[3]
+            intersectingPixelsCount = 0
+            faceASize = faceA[2]*faceA[3]
+            faceBSize = faceB[2]*faceB[3]
             for i in range(faceB[0], faceB[0]+faceB[2]):
                 for j in range(faceB[1], faceB[1]+faceB[3]):
-                    if (i>faceA[0] and i<faceA[0]+faceA[2] and j>faceA[1] and j<faceA[1]+faceA[3]):
-                        intersectingPixelsCount+=1
-            if (intersectingPixelsCount/(faceASize+faceBSize-intersectingPixelsCount)>percentile):
+                    if (i > faceA[0] and i < faceA[0]+faceA[2] and j > faceA[1] and j < faceA[1]+faceA[3]):
+                        intersectingPixelsCount += 1
+            if (intersectingPixelsCount/(faceASize+faceBSize-intersectingPixelsCount) > percentile):
                 correctFacesA.append(faceA)
                 correctFacesB.append(faceB)
                 break
+    # Returns the TP faces and the corresponding ground truth
     return (correctFacesA, correctFacesB)
 
-def calculateF1andTPR(faces, groundTruth, percentile):
-    tp= findUnionAndIntersection(faces,groundTruth,percentile)[1]
-    #true positive rate is true positives over all valid faces
-    tpr=len(tp)/len(groundTruth)
-    #precision is true positives over all detected
-    precision= len(tp)/len(faces)
-    f1=2*precision*tpr/(precision+tpr)
-    return f1,tpr
+
+def calculateF1andTPR(detected, groundTruth, percentile):
+    tp = findUnionAndIntersection(detected, groundTruth, percentile)[1]
+    # true positive rate is true positives over all valid faces
+    tpr = len(tp)/len(groundTruth)
+    # precision is true positives over all detected
+    precision = len(tp)/len(detected)
+    f1 = 2*precision*tpr/(precision+tpr)
+    return f1, tpr
 
 
 def detectAndDisplay(frame):
     # 1. Prepeare the image by turning it grayscale and normalising lighting.
     frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     frame_gray = cv2.equalizeHist(frame_gray)
-    haar = cv2.CASCADE_SCALE_IMAGE
     # 2. Perform Viola-Jones object detection
     faces = face_cascade.detectMultiScale(
-        frame_gray, 1.1, 1, 0 | haar, (50, 50), (500, 500))
+        frame_gray, 1.1, 1, 0 | cv2.CASCADE_SCALE_IMAGE, (50, 50), (500, 500))
     # 3. Print number of faces found
     print(len(faces))
     # 4. Draw green boxes around the faces found
     for (x, y, width, height) in faces:
-        frame = cv2.rectangle(
-            frame, (x, y), (x + width, y + height), (0, 255, 0), 2)
+        cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 255, 0), 2)
     # Ground truth
     manualFaces = {
         "dart4.jpg": [(345, 100, 125, 170)],
@@ -78,11 +83,15 @@ def detectAndDisplay(frame):
     cv2.waitKey(0)
 
 # Takes a single argument of the image we are trying to detect faces on
+
+
 def main():
     # Read the Input Image
     frame = cv2.imread(sys.argv[1])
+    # Read the cascade name
+    cascade_name = sys.argv[2]
     # Load the strong classifier
-    if not face_cascade.load(face_cascade_name):
+    if not face_cascade.load(cascade_name):
         print('--(!)Error loading face cascade')
         exit(0)
     # Detect faces and display the result
