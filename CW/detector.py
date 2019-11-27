@@ -68,7 +68,10 @@ def calculateF1andTPR(detected, groundTruth, percentile):
     # true positive rate is true positives over all valid faces
     tpr = len(tp)/len(groundTruth)
     # precision is true positives over all detected
-    precision = len(tp)/len(detected)
+    if detected != 0:
+        precision = len(tp)/len(detected)
+    else:
+        precision = 0
     if (precision + tpr) != 0:
         f1 = 2*precision*tpr/(precision+tpr)
     else:
