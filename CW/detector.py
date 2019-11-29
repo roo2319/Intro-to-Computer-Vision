@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 
 import lineswithgradient
+import circlesusinggradient
 
 cascade_name = ""
 cascade = cv2.CascadeClassifier()
@@ -80,6 +81,11 @@ def calculateF1andTPR(detected, groundTruth, percentile):
         f1 = 0
     return f1, tpr
 
+#only works for 3d array this is horrible
+def numpyIndex(array, value):
+    temp = np.nonzero(array==value)
+    return temp[0], temp[1], temp[2]
+
 
 def detectAndDisplay(frame):
     # 1. Prepeare the image by turning it grayscale and normalising lighting.
@@ -92,9 +98,22 @@ def detectAndDisplay(frame):
     print(len(detected))
     # 4. Draw green boxes around the objects found
     for (x, y, width, height) in detected:
-        if len(lineswithgradient.findLines(frame_gray[y:y+height,x:x+width])) >= 5:
+        if len(lineswithgradient.findLines(frame_gray[y:y+height,x:x+width])) >= 6:
             cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 255, 0), 2)
-
+    # 5. Detect circles 
+    circlesHough=circlesusinggradient.findCircles(frame_gray)
+    circlesHough=circlesHough.tolist()
+    circles=[]
+    for i in range(len(circlesHough)):
+        for j in range(len(circlesHough[0])):
+            for k in range(len(circlesHough[0][0])):
+                if circlesHough[i][j][k]!=0:
+                    circles.append(i,j,k)
+    circleBoxes=[(c[1],c[0],c[1]-c[2],c[0]-c[2]) for c in circles]
+    circles=findUnionAndIntersection(detected, circleBoxes, 0.6)[1]
+    for (x,y,r) in circles:
+        if (len(lineswithgradient.findLines(frame_gray[y-r:y+r,x-r:x+r])) >= 6):
+            cv2.rectangle(frame, (x-r, y-r), (x + r, y + r), (0, 255, 0), 2)
     cascade_name = os.path.basename(os.path.normpath(sys.argv[2]))
     if cascade_name == "frontalface.xml":
         groundTruth = manualFaces

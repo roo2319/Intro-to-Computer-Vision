@@ -1,8 +1,10 @@
 import numpy as np
 import cv2
 import math
-from scipy import ndimage
-import struct
+from sklearn import preprocessing
+import matplotlib.pyplot as plt
+from skimage import data, color
+from skimage.draw import circle_perimeter
 
 def convolution(xs,ys):
     result=0
@@ -67,24 +69,6 @@ def thresholdImage(image,thershold):
                 image[i,j]=0
     return image
 
-def calculateMean(image):
-    return(ndimage.measurements.center_of_mass(image))
-
-def calculateGeneralisedHoughSpace(image, gradient,threshold):
-    mean=calculateMean(image)
-    xRef=int(mean[0])
-    yRef=int(mean[1])
-    accumulator=np.array(360)
-
-def distance(x1,y1,x2,y2):
-    return math.sqrt(((x2-x1)**2)+((y2-y1)**2))
-
-def putNumberInRange(x,a,b):
-    while (x<a):
-        x+=a
-    while (x>=b):
-        x
-
 def sobel(image):
     # image = cv2.medianBlur(image, 5)
     kernelX=np.array(([-1,0,1],[-2,0,2],[-1,0,1]))
@@ -99,71 +83,43 @@ def sobel(image):
     cv2.waitKey(0)
     return (magnitude,gradient)
 
-def hough(im):
+def hough(image,threshold):
+    sobelMagnitude, sobelAngle= sobel(image)
+    hough=np.zeros((len(sobelMagnitude)+100,len(sobelMagnitude[0])+100,200))
+    for i in range(len(sobelMagnitude)):
+        for j in range(len(sobelMagnitude[0])):
+            if sobelMagnitude[i,j]==255:
+                for r in range(20,100):
+                    x1=int(j+r*math.cos(sobelAngle[i,j]))
+                    x2=int(j-r*math.cos(sobelAngle[i,j]))
+                    y1=int(i+r*math.sin(sobelAngle[i,j]))
+                    y2=int(i-r*math.sin(sobelAngle[i,j]))
+                    hough[y1,x1,r]+=1
+                    hough[y1,x2,r]+=1
+                    hough[y2,x1,r]+=1
+                    hough[y2,x2,r]+=1
+    for i in range(len(hough)):
+        for j in range(len(hough[0])):
+            for r in range(len(hough[0,0])):
+                if hough[i,j,r]<threshold:
+                    hough[i,j,r]=0
+    for i in range (len(hough)):
+        for j in range (len(hough[0])):
+            for k in range (len(hough[0][0])):
+                if (hough[i,j,k]>0):
+                    cv2.circle(image,(j,i),k,(255),1)
+    cv2.imshow("aaaa", image)
+    cv2.waitKey(0)
+    return hough
 
-    width, height = im.shape
-    diagonal = int(np.ceil(np.sqrt(width*width + height*height)))
-    houghSpace = np.zeros((2*diagonal, 360))
-
-    mag, ang = sobel(im)
-
-    # position in hough space represents location in these lists
-    p = range(-diagonal, diagonal)
-
-    for y in range(im.shape[0]):
-        for x in range(im.shape[1]):
-            if mag[y, x] != 0:
-                t = [angleD+ang[y][x] for angleD in np.arange(-0.1,0.1,0.02)]
-                for t_index in range(len(t)):
-                    angle = t[t_index]
-                    # As range from -diagonal to diagonal,
-                    # Add diagonal so range goes from 0 to 2 * diagonal
-                    p_index = int(x * np.cos(angle) + y *
-                                  np.sin(angle)) + diagonal
-                    houghSpace[p_index, int(math.degrees(angle))%360] += 1
-
-    for p_index in range(houghSpace.shape[0]):
-        for t_index in range(houghSpace.shape[1]):
-            # Hardcoded threshold, Play around (Maybe top 10?)
-            if houghSpace[p_index, t_index] < 20:
-                houghSpace[p_index, t_index] = 0 
-
-    angles = []
-    for p_index in range(houghSpace.shape[0]):
-        for t_index in range(houghSpace.shape[1]):
-            if houghSpace[p_index, t_index] > 0:
-                angles.append(t_index)
-                # print("start")
-                angle = math.radians(t_index)
-                # print(math.degrees(angle))
-                distance = p_index-diagonal
-                # print(distance)
-
-                a = np.cos(angle)
-                b = np.sin(angle)
-                # Find base coordinates
-                x0 = np.cos(angle) * distance
-                y0 = np.sin(angle) * distance
-
-                # Generate endpoints, to create a long line
-                x1 = int(x0 + 1000*(-b))
-                y1 = int(y0 + 1000*(a))
-                x2 = int(x0 - 1000*(-b))
-                y2 = int(y0 - 1000*(a))
-                cv2.line(im, (x1, y1), (x2, y2), (255, 0, 0), 1)
-    print(len(set(map(lambda x: x//10,angles))))
-    return set(map(lambda x: x//10,angles))
-
-
-
-def findLines(image): 
-    return hough(image)
+def findCircles(image): 
+    return hough(image,15)
 
 def main():
     image = cv2.imread('dart2.jpg')
     frame_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     frame_gray = cv2.equalizeHist(frame_gray)
-    findLines(frame_gray)
+    findCircles(frame_gray)
 
 if __name__ == "__main__":
     main()
