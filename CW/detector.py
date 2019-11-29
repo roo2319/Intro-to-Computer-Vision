@@ -5,6 +5,8 @@ import sys
 import cv2
 import numpy as np
 
+import lineswithgradient
+
 cascade_name = ""
 cascade = cv2.CascadeClassifier()
 groundTruth = {}
@@ -59,13 +61,13 @@ def findUnionAndIntersection(detected, groundTruth, percentile):
                 correctDetected.append(detected)
                 correctTruths.append(truth)
                 break
-    # Returns the TP faces and the corresponding ground truth
+    # Returns the TP objects and the corresponding ground truth
     return (correctDetected, correctTruths)
 
 
 def calculateF1andTPR(detected, groundTruth, percentile):
     tp = findUnionAndIntersection(detected, groundTruth, percentile)[1]
-    # true positive rate is true positives over all valid faces
+    # true positive rate is true positives over all valid objects
     tpr = len(tp)/len(groundTruth)
     # precision is true positives over all detected
     if len(detected) != 0:
@@ -86,11 +88,12 @@ def detectAndDisplay(frame):
     # 2. Perform Viola-Jones object detection
     detected = cascade.detectMultiScale(
         frame_gray, 1.1, 1, 0 | cv2.CASCADE_SCALE_IMAGE, (50, 50), (500, 500))
-    # 3. Print number of faces found
+    # 3. Print number of objects found
     print(len(detected))
-    # 4. Draw green boxes around the faces found
+    # 4. Draw green boxes around the objects found
     for (x, y, width, height) in detected:
-        cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 255, 0), 2)
+        if len(lineswithgradient.findLines(frame_gray[y:y+height,x:x+width])) >= 5:
+            cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 255, 0), 2)
 
     cascade_name = os.path.basename(os.path.normpath(sys.argv[2]))
     if cascade_name == "frontalface.xml":
@@ -113,7 +116,7 @@ def detectAndDisplay(frame):
     cv2.imshow('Capture - Object detection', frame)
     cv2.waitKey(0)
 
-# Takes a single argument of the image we are trying to detect faces on
+# Takes a single argument of the image we are trying to detect objects on
 
 
 def main():
@@ -125,9 +128,9 @@ def main():
 
     # Load the strong classifier
     if not cascade.load(cascade_path):
-        print('--(!)Error loading face cascade')
+        print('--(!)Error loading object cascade')
         exit(0)
-    # Detect faces and display the result
+    # Detect objects and display the result
     detectAndDisplay(frame)
     # Save result image
     cv2.imwrite("detected_"+sys.argv[1], frame)
