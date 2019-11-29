@@ -3,7 +3,6 @@ import cv2
 import math
 from scipy import ndimage
 import struct
-from skimage import transform
 
 def convolution(xs,ys):
     result=0
@@ -87,7 +86,7 @@ def putNumberInRange(x,a,b):
         x
 
 def sobel(image):
-    image = cv2.medianBlur(image, 5)
+    # image = cv2.medianBlur(image, 5)
     kernelX=np.array(([-1,0,1],[-2,0,2],[-1,0,1]))
     alteredImageX=applyKernel(kernelX,image)
     kernelY=np.array(([-1,-2,-1],[0,0,0],[1,2,1]))
@@ -96,8 +95,6 @@ def sobel(image):
     magnitude=np.interp(magnitude, (magnitude.min(), magnitude.max()), (0, 1))
     gradient=findGradient(alteredImageX,alteredImageY)
     thresholdedImage=thresholdImage(magnitude,0.2)
-    cv2.imshow("edgedetectionGradientThresholded",thresholdedImage)
-    cv2.waitKey(0)
     return (magnitude,gradient)
 
 def hough(im, angles):
@@ -123,23 +120,17 @@ def hough(im, angles):
                                   np.sin(angle)) + diagonal
                     houghSpace[p_index, int(math.degrees(angle))%360] += 1
 
-    print("Thresholding")
     for p_index in range(houghSpace.shape[0]):
         for t_index in range(houghSpace.shape[1]):
             # Hardcoded threshold, Play around (Maybe top 10?)
             if houghSpace[p_index, t_index] < 20:
-                houghSpace[p_index, t_index] = 0
-                
-            else:
-                print(p_index)
-                print(t_index)
-    cv2.imshow("HOG", houghSpace)
-    cv2.waitKey(0)
+                houghSpace[p_index, t_index] = 0 
 
-    print("Overlaying")
+    angles = []
     for p_index in range(houghSpace.shape[0]):
         for t_index in range(houghSpace.shape[1]):
             if houghSpace[p_index, t_index] > 0:
+                angles.append(t_index)
                 # print("start")
                 angle = math.radians(t_index)
                 # print(math.degrees(angle))
@@ -158,17 +149,20 @@ def hough(im, angles):
                 x2 = int(x0 - 1000*(-b))
                 y2 = int(y0 - 1000*(a))
                 cv2.line(im, (x1, y1), (x2, y2), (255, 0, 0), 1)
+    print(len(set(map(lambda x: x//10,angles))))
+    return set(map(lambda x: x//10,angles))
 
-    cv2.imshow("overlay", im)
-    cv2.waitKey(0)
 
 
-def main(): 
+def findLines(image): 
+    sobelMagnitude, sobelAngle= sobel(image)
+    return hough(sobelMagnitude,sobelAngle)
+
+def main():
     image = cv2.imread('dart2.jpg')
     frame_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     frame_gray = cv2.equalizeHist(frame_gray)
-    sobelMagnitude, sobelAngle= sobel(frame_gray)
-    hough(sobelMagnitude,sobelAngle)
+    findlines(frame_gray)
 
 if __name__ == "__main__":
     main()
