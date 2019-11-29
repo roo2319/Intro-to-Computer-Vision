@@ -149,7 +149,6 @@ def hough(im, angles):
                 x2 = int(x0 - 1000*(-b))
                 y2 = int(y0 - 1000*(a))
                 cv2.line(im, (x1, y1), (x2, y2), (255, 0, 0), 1)
-    print(len(set(map(lambda x: x//10,angles))))
     return set(map(lambda x: x//10,angles))
 
 

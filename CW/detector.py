@@ -46,6 +46,7 @@ percentile
 def findUnionAndIntersection(detected, groundTruth, percentile):
     correctDetected = []
     correctTruths = []
+    IOU = []
     detectedSet = set(tuple(i) for i in detected)
     truthSet = set(tuple(j) for j in groundTruth)
     for truth in truthSet.symmetric_difference(correctTruths):
@@ -57,16 +58,20 @@ def findUnionAndIntersection(detected, groundTruth, percentile):
                 for j in range(truth[1], truth[1]+truth[3]):
                     if (i > detected[0] and i < detected[0]+detected[2] and j > detected[1] and j < detected[1]+detected[3]):
                         intersectingPixelsCount += 1
-            if (intersectingPixelsCount/(detectedSize+trueSize-intersectingPixelsCount) > percentile):
+            IOU.append(intersectingPixelsCount/(detectedSize+trueSize-intersectingPixelsCount))
+
+            if IOU[-1] > percentile:
                 correctDetected.append(detected)
                 correctTruths.append(truth)
-                break
     # Returns the TP objects and the corresponding ground truth
-    return (correctDetected, correctTruths)
+    return correctDetected, correctTruths, IOU
 
 
 def calculateF1andTPR(detected, groundTruth, percentile):
-    tp = findUnionAndIntersection(detected, groundTruth, percentile)[1]
+    res = findUnionAndIntersection(detected, groundTruth, percentile)
+    tp = res[1] 
+    iou = res[2]
+    print(iou)
     # true positive rate is true positives over all valid objects
     tpr = len(tp)/len(groundTruth)
     # precision is true positives over all detected
@@ -112,7 +117,7 @@ def detectAndDisplay(frame):
             frame = cv2.rectangle(
                 frame, (x, y), (x + width, y + height), (0, 0, 255), 2)
         # 6. Calculate TPR
-        print(calculateF1andTPR(detected, groundTruth[normpath], 0.6))
+        print(calculateF1andTPR(detected, groundTruth[normpath], 0.3))
     cv2.imshow('Capture - Object detection', frame)
     cv2.waitKey(0)
 
