@@ -92,7 +92,7 @@ def detectAndDisplay(frame):
     print(len(detected))
     # 4. Draw green boxes around the objects found
     for (x, y, width, height) in detected:
-        if len(lineswithgradient.findLines(frame_gray[y:y+height,x:x+width])) >= 20:
+        if len(lineswithgradient.findLines(frame_gray[y:y+height,x:x+width])) >= 5:
             cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 255, 0), 2)
 
     cascade_name = os.path.basename(os.path.normpath(sys.argv[2]))
