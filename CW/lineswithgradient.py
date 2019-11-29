@@ -94,10 +94,12 @@ def sobel(image):
     magnitude=findMagnitude(alteredImageX,alteredImageY)
     magnitude=np.interp(magnitude, (magnitude.min(), magnitude.max()), (0, 1))
     gradient=findGradient(alteredImageX,alteredImageY)
-    thresholdedImage=thresholdImage(magnitude,0.2)
+    thresholdedImage=thresholdImage(magnitude,0.4)
+    cv2.imshow("edgedetectionGradientThresholded",thresholdedImage)
+    cv2.waitKey(0)
     return (magnitude,gradient)
 
-def hough(im, angles):
+def hough(im):
 
     width, height = im.shape
     diagonal = int(np.ceil(np.sqrt(width*width + height*height)))
