@@ -103,7 +103,7 @@ def calculateF1andTPR(detected, groundTruth, percentile):
     return f1, tpr
 
 
-def detectAndDisplay(frame):
+def detectAndDisplay(frame,name):
     # 1. Prepeare the image by turning it grayscale and normalising lighting.
     frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     frame_gray = cv2.equalizeHist(frame_gray)
@@ -116,10 +116,10 @@ def detectAndDisplay(frame):
 
     # 4. Draw green boxes around the objects found
     for (x, y, width, height) in detected:
-        if len(lineswithgradient.findLines(frame_gray[y:y+height,x:x+width])) >= 5:
+        if len(lineswithgradient.hough(frame_gray[y:y+height,x:x+width])) >= 5:
             cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 255, 0), 2)
 
-    cascade_name = os.path.basename(os.path.normpath(sys.argv[2]))
+    cascade_name = os.path.basename(os.path.normpath(sys.argv[1]))
     if cascade_name == "frontalface.xml":
         groundTruth = manualFaces
     elif cascade_name == "dartboards.xml":
@@ -127,7 +127,7 @@ def detectAndDisplay(frame):
         groundTruth = manualDarts
         
     # We want to normalise the filepath, so we can understand all possible references
-    normpath = os.path.basename(os.path.normpath(sys.argv[1]))
+    normpath = os.path.basename(os.path.normpath(name))
     # If we have ground truth for this file
     if (normpath in groundTruth):
         print(normpath)
@@ -144,20 +144,34 @@ def detectAndDisplay(frame):
 
 
 def main():
-    # Read the Input Image
-    frame = cv2.imread(sys.argv[1])
     # Read the cascade name
-    cascade_path = sys.argv[2]
-
+    cascade_path = sys.argv[1]
 
     # Load the strong classifier
     if not cascade.load(cascade_path):
         print('--(!)Error loading object cascade')
         exit(0)
+
+    try:
+        # Read the Input Image
+        frame = cv2.imread(sys.argv[2])
+        detectAndDisplay(frame)
+        cv2.imwrite("detected_"+sys.argv[2], frame)
+    except:
+        #Run for all images if no second arg
+        print ("Running on all images")
+        cascade_name = os.path.basename(os.path.normpath(sys.argv[1]))
+        if cascade_name == "frontalface.xml":
+            groundTruth = manualFaces
+        elif cascade_name == "dartboards.xml":
+            print ("Detecting dartboards")
+            groundTruth = manualDarts
+        for name in groundTruth.keys():
+            frame = cv2.imread(name)
+            detectAndDisplay(frame,name)
+
     # Detect objects and display the result
-    detectAndDisplay(frame)
     # Save result image
-    cv2.imwrite("detected_"+sys.argv[1], frame)
     return 0
 
 

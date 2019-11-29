@@ -155,15 +155,11 @@ def hough(im):
 
 
 
-def findLines(image): 
-    sobelMagnitude, sobelAngle= sobel(image)
-    return hough(sobelMagnitude,sobelAngle)
-
 def main():
     image = cv2.imread('dart2.jpg')
     frame_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     frame_gray = cv2.equalizeHist(frame_gray)
-    findlines(frame_gray)
+    findLines(frame_gray)
 
 if __name__ == "__main__":
     main()
