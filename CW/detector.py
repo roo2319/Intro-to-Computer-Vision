@@ -37,16 +37,34 @@ manualDarts = {
     "dart15.jpg": [(155,56,131,138)]
 }
 
+
+# #detected :: [x,y,width,height]
+# def combineRectangles(detected):
+#     detected = list(detected)
+#     for r in detected:
+#         detected.remove(r)
+#         for r2 in detected:
+
+#             # Check if x is in middle
+#             if (r2[0] < r[0] + r[2]) and (r2[0] > r[0]) :
+#                 if (r2[1] < r[1] + r[3]) and (r2[1] > r[1]):
+#                     detected.append(r[0],r[1],max(r[0]+r[2],r2[0]+r2[2]),max(r[1]+r[3],r2[1]+r2[3]))
+#                     detected.remove(r2)
+#     return detected
+
+
+
+
 '''
 Calculates intersection over union of the two rectangles and, if it is above a certain threshold, classifies them as correctly identified
 facesX :: [(x,y,width,height)]
 percentile
 '''
 
-
 def findUnionAndIntersection(detected, groundTruth, percentile):
     correctDetected = []
     correctTruths = []
+    IOU = []
     detectedSet = set(tuple(i) for i in detected)
     truthSet = set(tuple(j) for j in groundTruth)
     for truth in truthSet.symmetric_difference(correctTruths):
@@ -58,16 +76,20 @@ def findUnionAndIntersection(detected, groundTruth, percentile):
                 for j in range(truth[1], truth[1]+truth[3]):
                     if (i > detected[0] and i < detected[0]+detected[2] and j > detected[1] and j < detected[1]+detected[3]):
                         intersectingPixelsCount += 1
-            if (intersectingPixelsCount/(detectedSize+trueSize-intersectingPixelsCount) > percentile):
+            IOU.append(intersectingPixelsCount/(detectedSize+trueSize-intersectingPixelsCount))
+
+            if IOU[-1] > percentile:
                 correctDetected.append(detected)
                 correctTruths.append(truth)
-                break
     # Returns the TP objects and the corresponding ground truth
-    return (correctDetected, correctTruths)
+    return correctDetected, correctTruths, IOU
 
 
 def calculateF1andTPR(detected, groundTruth, percentile):
-    tp = findUnionAndIntersection(detected, groundTruth, percentile)[1]
+    res = findUnionAndIntersection(detected, groundTruth, percentile)
+    tp = res[1] 
+    iou = res[2]
+    print(iou)
     # true positive rate is true positives over all valid objects
     tpr = len(tp)/len(groundTruth)
     # precision is true positives over all detected
@@ -87,17 +109,20 @@ def numpyIndex(array, value):
     return temp[0], temp[1], temp[2]
 
 
-def detectAndDisplay(frame):
+def detectAndDisplay(frame,name):
     # 1. Prepeare the image by turning it grayscale and normalising lighting.
     frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     frame_gray = cv2.equalizeHist(frame_gray)
     # 2. Perform Viola-Jones object detection
     detected = cascade.detectMultiScale(
         frame_gray, 1.1, 1, 0 | cv2.CASCADE_SCALE_IMAGE, (50, 50), (500, 500))
-    # 3. Print number of objects found
+    # # 3. Combine rectangles then print number of objects found
+    # detected = combineRectangles(detected)
     print(len(detected))
+
     # 4. Draw green boxes around the objects found
     for (x, y, width, height) in detected:
+<<<<<<< HEAD
         if len(lineswithgradient.findLines(frame_gray[y:y+height,x:x+width])) >= 6:
             cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 255, 0), 2)
     # 5. Detect circles 
@@ -115,6 +140,12 @@ def detectAndDisplay(frame):
         if (len(lineswithgradient.findLines(frame_gray[y-r:y+r,x-r:x+r])) >= 6):
             cv2.rectangle(frame, (x-r, y-r), (x + r, y + r), (0, 255, 0), 2)
     cascade_name = os.path.basename(os.path.normpath(sys.argv[2]))
+=======
+        if len(lineswithgradient.hough(frame_gray[y:y+height,x:x+width])) >= 5:
+            cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 255, 0), 2)
+
+    cascade_name = os.path.basename(os.path.normpath(sys.argv[1]))
+>>>>>>> 0b1d2c3f30e0fd51a16c597a9ad5e8c66b099d07
     if cascade_name == "frontalface.xml":
         groundTruth = manualFaces
     elif cascade_name == "dartboards.xml":
@@ -122,7 +153,7 @@ def detectAndDisplay(frame):
         groundTruth = manualDarts
         
     # We want to normalise the filepath, so we can understand all possible references
-    normpath = os.path.basename(os.path.normpath(sys.argv[1]))
+    normpath = os.path.basename(os.path.normpath(name))
     # If we have ground truth for this file
     if (normpath in groundTruth):
         print(normpath)
@@ -131,7 +162,7 @@ def detectAndDisplay(frame):
             frame = cv2.rectangle(
                 frame, (x, y), (x + width, y + height), (0, 0, 255), 2)
         # 6. Calculate TPR
-        print(calculateF1andTPR(detected, groundTruth[normpath], 0.6))
+        print(calculateF1andTPR(detected, groundTruth[normpath], 0.3))
     cv2.imshow('Capture - Object detection', frame)
     cv2.waitKey(0)
 
@@ -139,20 +170,34 @@ def detectAndDisplay(frame):
 
 
 def main():
-    # Read the Input Image
-    frame = cv2.imread(sys.argv[1])
     # Read the cascade name
-    cascade_path = sys.argv[2]
-
+    cascade_path = sys.argv[1]
 
     # Load the strong classifier
     if not cascade.load(cascade_path):
         print('--(!)Error loading object cascade')
         exit(0)
+
+    try:
+        # Read the Input Image
+        frame = cv2.imread(sys.argv[2])
+        detectAndDisplay(frame)
+        cv2.imwrite("detected_"+sys.argv[2], frame)
+    except:
+        #Run for all images if no second arg
+        print ("Running on all images")
+        cascade_name = os.path.basename(os.path.normpath(sys.argv[1]))
+        if cascade_name == "frontalface.xml":
+            groundTruth = manualFaces
+        elif cascade_name == "dartboards.xml":
+            print ("Detecting dartboards")
+            groundTruth = manualDarts
+        for name in groundTruth.keys():
+            frame = cv2.imread(name)
+            detectAndDisplay(frame,name)
+
     # Detect objects and display the result
-    detectAndDisplay(frame)
     # Save result image
-    cv2.imwrite("detected_"+sys.argv[1], frame)
     return 0
 
 

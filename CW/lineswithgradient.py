@@ -151,14 +151,16 @@ def hough(im):
                 x2 = int(x0 - 1000*(-b))
                 y2 = int(y0 - 1000*(a))
                 cv2.line(im, (x1, y1), (x2, y2), (255, 0, 0), 1)
-    print(len(set(map(lambda x: x//10,angles))))
     return set(map(lambda x: x//10,angles))
 
 
 
+<<<<<<< HEAD
 def findLines(image): 
     return hough(image)
 
+=======
+>>>>>>> 0b1d2c3f30e0fd51a16c597a9ad5e8c66b099d07
 def main():
     image = cv2.imread('dart2.jpg')
     frame_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
