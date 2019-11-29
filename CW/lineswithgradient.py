@@ -95,12 +95,12 @@ def sobel(image):
     magnitude=findMagnitude(alteredImageX,alteredImageY)
     magnitude=np.interp(magnitude, (magnitude.min(), magnitude.max()), (0, 1))
     gradient=findGradient(alteredImageX,alteredImageY)
-    thresholdedImage=thresholdImage(magnitude,0.2)
+    thresholdedImage=thresholdImage(magnitude,0.4)
     cv2.imshow("edgedetectionGradientThresholded",thresholdedImage)
     cv2.waitKey(0)
     return (magnitude,gradient)
 
-def hough(im, angles):
+def hough(im):
 
     width, height = im.shape
     diagonal = int(np.ceil(np.sqrt(width*width + height*height)))
@@ -124,12 +124,12 @@ def hough(im, angles):
                     houghSpace[p_index, int(math.degrees(angle))%360] += 1
 
     print("Thresholding")
+    houghSpace/=houghSpace.max()
     for p_index in range(houghSpace.shape[0]):
         for t_index in range(houghSpace.shape[1]):
             # Hardcoded threshold, Play around (Maybe top 10?)
-            if houghSpace[p_index, t_index] < 20:
+            if houghSpace[p_index, t_index] < 0.2:
                 houghSpace[p_index, t_index] = 0
-                
             else:
                 print(p_index)
                 print(t_index)
@@ -167,8 +167,7 @@ def main():
     image = cv2.imread('dart2.jpg')
     frame_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     frame_gray = cv2.equalizeHist(frame_gray)
-    sobelMagnitude, sobelAngle= sobel(frame_gray)
-    hough(sobelMagnitude,sobelAngle)
+    hough(frame_gray)
 
 if __name__ == "__main__":
     main()

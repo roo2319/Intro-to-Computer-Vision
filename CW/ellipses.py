@@ -178,19 +178,23 @@ def houghEllipses(im,minDistance, threshold):
             # print(x2,y2)
             if (distance(x1,y1,x2,y2)>minDistance and x1!=x2):
                 accumulator=np.zeros(300)
-                x0=int((x1+x2)/2)
-                y0=int((y1+y2)/2)
-                a=int(distance(x1,y1,x2,y2)/2)
+                x0=(x1+x2)/2
+                y0=(y1+y2)/2
+                a=distance(x1,y1,x2,y2)/2
                 alpha=math.atan((y2-y1)/(x2-x1))
                 for (x3,y3) in [p3 for p3 in pixels if (p3!= (x1,y1) and p3!= (x2,y2))]:
-                    d=int(distance(x0,y0,x3,y3))
+                    d=distance(x0,y0,x3,y3)
                     if (d>minDistance):
                         cosTao=(a**2 + d**2 - distance(x3,y3,x2,y2)**2)/(2*a*d)
-                        print(cosTao) #there's something wrong with tao, the values are >1
-                        b=int(math.sqrt((a**2 * d**2 * (1-cosTao**2))/(a**2 - d**2 * cosTao**2)))
-                        if b<len(accumulator):
-                            accumulator[b]+=1
+                        if (a**2 - d**2 * cosTao**2)!=0:
+                            bSquared=(a**2 * d**2 * (1-cosTao**2))/(a**2 - d**2 * cosTao**2)
+                            if bSquared>0:
+                                b=int(math.sqrt(bSquared))
+                                if b<len(accumulator):
+                                    accumulator[b]+=1
                 if (accumulator.max()>=threshold):
+                    print("found")
+                    print(accumulator.max())
                     validEllipses.append((x0,y0,a,b,alpha))
                     pixels[:] = [p for p in pixels if (p!=(x1,y1) and p!=(x2,y2) and p!=(x3,y3))]
                     del accumulator
@@ -201,11 +205,11 @@ def houghEllipses(im,minDistance, threshold):
     return validEllipses
 
 def main(): 
-    image = cv2.imread('dart2.jpg')
+    image = cv2.imread('ellipse.jpg')
     frame_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     frame_gray = cv2.equalizeHist(frame_gray)
     sobelMagnitude, sobelAngle= sobel(frame_gray)
-    ellipses=houghEllipses(sobelMagnitude, 40, 16000)
+    ellipses=houghEllipses(sobelMagnitude, 40, 50)
     # ellipses = transform.hough_ellipse(sobelMagnitude, accuracy=20, threshold=250,
     #                    min_size=100, max_size=120)
     for (x,y,a,b,alpha) in ellipses:
