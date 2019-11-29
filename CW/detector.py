@@ -36,12 +36,29 @@ manualDarts = {
     "dart15.jpg": [(155,56,131,138)]
 }
 
+
+# #detected :: [x,y,width,height]
+# def combineRectangles(detected):
+#     detected = list(detected)
+#     for r in detected:
+#         detected.remove(r)
+#         for r2 in detected:
+
+#             # Check if x is in middle
+#             if (r2[0] < r[0] + r[2]) and (r2[0] > r[0]) :
+#                 if (r2[1] < r[1] + r[3]) and (r2[1] > r[1]):
+#                     detected.append(r[0],r[1],max(r[0]+r[2],r2[0]+r2[2]),max(r[1]+r[3],r2[1]+r2[3]))
+#                     detected.remove(r2)
+#     return detected
+
+
+
+
 '''
 Calculates intersection over union of the two rectangles and, if it is above a certain threshold, classifies them as correctly identified
 facesX :: [(x,y,width,height)]
 percentile
 '''
-
 
 def findUnionAndIntersection(detected, groundTruth, percentile):
     correctDetected = []
@@ -93,8 +110,10 @@ def detectAndDisplay(frame):
     # 2. Perform Viola-Jones object detection
     detected = cascade.detectMultiScale(
         frame_gray, 1.1, 1, 0 | cv2.CASCADE_SCALE_IMAGE, (50, 50), (500, 500))
-    # 3. Print number of objects found
+    # # 3. Combine rectangles then print number of objects found
+    # detected = combineRectangles(detected)
     print(len(detected))
+
     # 4. Draw green boxes around the objects found
     for (x, y, width, height) in detected:
         if len(lineswithgradient.findLines(frame_gray[y:y+height,x:x+width])) >= 5:
