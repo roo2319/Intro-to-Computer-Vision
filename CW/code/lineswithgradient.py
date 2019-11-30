@@ -56,7 +56,6 @@ def hough(im):
                 x2 = int(x0 - 1000*(-b))
                 y2 = int(y0 - 1000*(a))
                 # cv2.line(im, (x1, y1), (x2, y2), (255, 0, 0), 1)
-    print(set(map(lambda x: x//10,angles)))
     return set(map(lambda x: x//10,angles))
 
 
@@ -65,7 +64,7 @@ def findLines(image):
     return hough(image)
 
 def main():
-    image = cv2.imread('dart2.jpg')
+    image = cv2.imread('../test_images/dart2.jpg')
     frame_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     frame_gray = cv2.equalizeHist(frame_gray)
     findLines(frame_gray)

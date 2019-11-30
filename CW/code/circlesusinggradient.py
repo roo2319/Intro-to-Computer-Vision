@@ -40,7 +40,7 @@ def findCircles(image):
     return hough(image,15)
 
 def main():
-    image = cv2.imread('dart1.jpg')
+    image = cv2.imread('../test_images/dart1.jpg')
     frame_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     frame_gray = cv2.equalizeHist(frame_gray)
     findCircles(frame_gray)

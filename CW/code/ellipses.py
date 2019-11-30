@@ -69,7 +69,6 @@ def houghEllipses(im, minDistance, threshold):
                 pixels.remove(p2)
                 pixels.remove(p3)
                 del accumulator
-                print("ellipse found!")
                 break
         
     return validEllipses

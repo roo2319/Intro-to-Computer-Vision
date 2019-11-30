@@ -19,9 +19,8 @@ def convolution(im,kernel):
     kernel = np.flipud(np.fliplr(kernel))
     return cv2.filter2D(im,-1,kernel,anchor=(-1,-1))
 
-
+# Assume incoming image is grayscale
 def sobel(im):
-    im = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
     # Approximate derivatives with a sobel kernel
     sobelX = np.array(([-1, 0, 1],
                         [-2, 0, 2],
@@ -49,6 +48,7 @@ def sobel(im):
 
 def main():
     im = cv2.imread("../test_images/dart1.jpg")
+    im = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
     a = sobel(im)
     cv2.imshow("Mag",a[0])
     cv2.waitKey(0)

@@ -114,21 +114,23 @@ def detectAndDisplay(frame, name):
     print(len(detected))
 
     # 4. Draw green boxes around the objects found
+    refined = []
     for (x, y, width, height) in detected:
 
         numberOfLines = len(lineswithgradient.findLines(
             frame_gray[y:y+height, x:x+width]))
-        numberOfEllipses = (ellipses.detectEllipses(frame_gray[fixRange(y-20, 0, len(frame_gray)):fixRange(
-            y+height+20, 0, len(frame_gray)), fixRange(x-20, 0, len(frame_gray[0])):fixRange(x+height+20, 0, len(frame_gray[0]))]))
-        numberOfCircles = circlesusinggradient.findCircles(frame_gray[fixRange(y-20, 0, len(frame_gray)):fixRange(
-            y+height+20, 0, len(frame_gray)), fixRange(x-20, 0, len(frame_gray[0])):fixRange(x+height+20, 0, len(frame_gray[0]))])
+        # numberOfEllipses = (ellipses.detectEllipses(frame_gray[fixRange(y-20, 0, len(frame_gray)):fixRange(
+        #     y+height+20, 0, len(frame_gray)), fixRange(x-20, 0, len(frame_gray[0])):fixRange(x+height+20, 0, len(frame_gray[0]))]))
+        # numberOfCircles = circlesusinggradient.findCircles(frame_gray[fixRange(y-20, 0, len(frame_gray)):fixRange(
+        #     y+height+20, 0, len(frame_gray)), fixRange(x-20, 0, len(frame_gray[0])):fixRange(x+height+20, 0, len(frame_gray[0]))])
 
-        if numberOfLines >= 4 and (numberOfEllipses > 1 or numberOfCircles > 1):
+        # if numberOfLines >= 4 and (numberOfEllipses > 1 or numberOfCircles > 1):
+        if numberOfLines >= 4:
             cv2.rectangle(frame, (x, y), (x + width,
                                           y + height), (0, 255, 0), 2)
-        else:
-            detected = detected[detected != (x, y, width, height)]
-        print(numberOfLines, numberOfCircles, numberOfEllipses)
+            refined.append((x,y,width,height))
+
+        # print(numberOfLines, numberOfCircles, numberOfEllipses)
     cascade_name = os.path.basename(os.path.normpath(sys.argv[1])) 
     if cascade_name == "frontalface.xml":
         groundTruth = manualFaces
@@ -146,7 +148,7 @@ def detectAndDisplay(frame, name):
             frame = cv2.rectangle(
                 frame, (x, y), (x + width, y + height), (0, 0, 255), 2)
         # 6. Calculate TPR
-        print(calculateF1andTPR(detected, groundTruth[normpath], 0.5))
+        print(calculateF1andTPR(refined, groundTruth[normpath], 0.5))
     cv2.imshow('Capture - Object detection', frame)
     cv2.waitKey(0)
 
@@ -176,7 +178,7 @@ def main():
             print("Detecting dartboards")
             groundTruth = manualDarts
         for name in groundTruth.keys():
-            frame = cv2.imread(name)
+            frame = cv2.imread("../test_images/"+name)
             detectAndDisplay(frame, name)
 
     # Detect objects and display the result
