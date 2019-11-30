@@ -52,7 +52,7 @@ def sobel(im):
 
 
 def main():
-    im = cv2.imread("../test_images/dart1.jpg")
+    im = cv2.imread("../test_images/ellipse.jpg")
     im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
     a = sobel(im)
     cv2.imshow("Mag", a[0])
