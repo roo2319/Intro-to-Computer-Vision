@@ -51,21 +51,24 @@ def findUnionAndIntersection(detected, groundTruth, percentile):
     IOU = []
     detectedSet = set(tuple(i) for i in detected)
     truthSet = set(tuple(j) for j in groundTruth)
-    for truth in truthSet.symmetric_difference(correctTruths):
-        for detected in detectedSet.symmetric_difference(correctDetected):
+    
+    # Unpack rectangle
+    for (xt,yt,wt,ht) in truthSet.symmetric_difference(correctTruths):
+        for (xd,yd,wd,hd) in detectedSet.symmetric_difference(correctDetected):
             intersectingPixelsCount = 0
-            detectedSize = detected[2]*detected[3]
-            trueSize = truth[2]*truth[3]
-            for i in range(truth[0], truth[0]+truth[2]):
-                for j in range(truth[1], truth[1]+truth[3]):
-                    if (i > detected[0] and i < detected[0]+detected[2] and j > detected[1] and j < detected[1]+detected[3]):
+            detectedSize = wd*hd
+            trueSize = wt*ht
+            for i in range(xt, xt+wt):
+                for j in range(yt, yt+ht):
+                    if (i > xd and i < xd+wd and j > yd and j < yd+hd):
                         intersectingPixelsCount += 1
+
             IOU.append(intersectingPixelsCount /
                        (detectedSize+trueSize-intersectingPixelsCount))
 
             if IOU[-1] > percentile:
-                correctDetected.append(detected)
-                correctTruths.append(truth)
+                correctDetected.append((xd,yd,wd,hd))
+                correctTruths.append((xt,yt,wt,ht))
     # Returns the TP objects and the corresponding ground truth
     return correctDetected, correctTruths, IOU
 
@@ -88,18 +91,6 @@ def calculateF1andTPR(detected, groundTruth, percentile):
     return f1, tpr
 
 
-# only works for 3d array this is horrible
-def numpyIndex(array, value):
-    temp = np.nonzero(array == value)
-    return temp[0], temp[1], temp[2]
-
-
-def fixRange(n, min, max):
-    if n < min:
-        return min
-    if n > max:
-        return max
-    return n
 
 
 def detectAndDisplay(frame, name):
@@ -121,6 +112,7 @@ def detectAndDisplay(frame, name):
             frame_gray[y:y+height, x:x+width]))
         # numberOfEllipses = (ellipses.detectEllipses(frame_gray[fixRange(y-20, 0, len(frame_gray)):fixRange(
         #     y+height+20, 0, len(frame_gray)), fixRange(x-20, 0, len(frame_gray[0])):fixRange(x+height+20, 0, len(frame_gray[0]))]))
+        numberOfCircles = circlesusinggradient.findCircles(frame_gray[y:y+height,x:x+width])
         # numberOfCircles = circlesusinggradient.findCircles(frame_gray[fixRange(y-20, 0, len(frame_gray)):fixRange(
         #     y+height+20, 0, len(frame_gray)), fixRange(x-20, 0, len(frame_gray[0])):fixRange(x+height+20, 0, len(frame_gray[0]))])
 

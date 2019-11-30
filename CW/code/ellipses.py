@@ -18,12 +18,9 @@ def houghEllipses(im, minDistance, threshold):
     pixels = []
     for i in range(len(im)):
         for j in range(len(im[0])):
-            if im[i, j] == 255 and random.randint(1,10) == 2:
+            if im[i, j] == 255 and random.randint(1,30) == 2:
                 pixels.append((j, i))
-    print (len(pixels))
 
-    #Keeps 20% of pixels randomly to reduce runtime
-    pixels=random.sample(pixels, int(len(pixels)/5))
 
     #2. For each pixel, carry out the following
     for p1 in pixels:
@@ -76,17 +73,16 @@ def houghEllipses(im, minDistance, threshold):
 def detectEllipses(image):
     sobelMagnitude, sobelAngle = sobel(image)
     ellipses = houghEllipses(sobelMagnitude, 40, 250)
-    print(ellipses)
+    return ellipses
+
+def main():
+    image = cv2.imread('../test_images/dart12.jpg')
+    frame_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    frame_gray = cv2.equalizeHist(frame_gray)
+    ellipses = detectEllipses(frame_gray)
     for (center,axis,orientation) in ellipses:
         cv2.ellipse(image, center, axis, orientation, 0, 360, (200,50,255))
     cv2.imshow("Ellipses", image)
-    return len(ellipses)
-
-def main():
-    image = cv2.imread("dart2.jpg")
-    frame_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    frame_gray = cv2.equalizeHist(frame_gray)
-    ellipses = detectEllipses("dart2.jpg")
     cv2.waitKey(0)
 
 if __name__ == "__main__":
