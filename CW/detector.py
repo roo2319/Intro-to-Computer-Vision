@@ -119,33 +119,27 @@ def detectAndDisplay(frame,name):
     # # 3. Combine rectangles then print number of objects found
     # detected = combineRectangles(detected)
     print(len(detected))
-
+    
     # 4. Draw green boxes around the objects found
     for (x, y, width, height) in detected:
-<<<<<<< HEAD
-        if len(lineswithgradient.findLines(frame_gray[y:y+height,x:x+width])) >= 6:
+        if len(lineswithgradient.findLines(frame_gray[y:y+height,x:x+width])) >= 4 and circlesusinggradient.findCircles(frame_gray[y:y+height,x:x+width])>1:
             cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 255, 0), 2)
-    # 5. Detect circles 
-    circlesHough=circlesusinggradient.findCircles(frame_gray)
-    circlesHough=circlesHough.tolist()
-    circles=[]
-    for i in range(len(circlesHough)):
-        for j in range(len(circlesHough[0])):
-            for k in range(len(circlesHough[0][0])):
-                if circlesHough[i][j][k]!=0:
-                    circles.append(i,j,k)
-    circleBoxes=[(c[1],c[0],c[1]-c[2],c[0]-c[2]) for c in circles]
-    circles=findUnionAndIntersection(detected, circleBoxes, 0.6)[1]
-    for (x,y,r) in circles:
-        if (len(lineswithgradient.findLines(frame_gray[y-r:y+r,x-r:x+r])) >= 6):
-            cv2.rectangle(frame, (x-r, y-r), (x + r, y + r), (0, 255, 0), 2)
-    cascade_name = os.path.basename(os.path.normpath(sys.argv[2]))
-=======
-        if len(lineswithgradient.hough(frame_gray[y:y+height,x:x+width])) >= 5:
-            cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 255, 0), 2)
-
+    # # 5. Detect circles 
+    # circlesHough=circlesusinggradient.findCircles(frame_gray)
+    # circlesHough=circlesHough.tolist()
+    # circles=[]
+    # for i in range(len(circlesHough)):
+    #     for j in range(len(circlesHough[0])):
+    #         for k in range(len(circlesHough[0][0])):
+    #             if circlesHough[i][j][k]!=0:
+    #                 circles.append((i,j,k))
+    # circleBoxes=[(c[1],c[0],c[1]-c[2],c[0]-c[2]) for c in circles]
+    # circles=findUnionAndIntersection(detected, circleBoxes, 0.6)[1]
+    # for (x,y,r) in circles:
+    #     if (len(lineswithgradient.findLines(frame_gray[y-r:y+r,x-r:x+r])) >= 6):
+    #         print("dartboard detected by circle")
+    #         cv2.rectangle(frame, (x-r, y-r), (x + r, y + r), (0, 255, 0), 2)
     cascade_name = os.path.basename(os.path.normpath(sys.argv[1]))
->>>>>>> 0b1d2c3f30e0fd51a16c597a9ad5e8c66b099d07
     if cascade_name == "frontalface.xml":
         groundTruth = manualFaces
     elif cascade_name == "dartboards.xml":
@@ -153,7 +147,7 @@ def detectAndDisplay(frame,name):
         groundTruth = manualDarts
         
     # We want to normalise the filepath, so we can understand all possible references
-    normpath = os.path.basename(os.path.normpath(name))
+    normpath = os.path.basename(os.path.normpath(sys.argv[2]))
     # If we have ground truth for this file
     if (normpath in groundTruth):
         print(normpath)
@@ -162,7 +156,7 @@ def detectAndDisplay(frame,name):
             frame = cv2.rectangle(
                 frame, (x, y), (x + width, y + height), (0, 0, 255), 2)
         # 6. Calculate TPR
-        print(calculateF1andTPR(detected, groundTruth[normpath], 0.3))
+        print(calculateF1andTPR(detected, groundTruth[normpath], 0.6))
     cv2.imshow('Capture - Object detection', frame)
     cv2.waitKey(0)
 
@@ -172,7 +166,6 @@ def detectAndDisplay(frame,name):
 def main():
     # Read the cascade name
     cascade_path = sys.argv[1]
-
     # Load the strong classifier
     if not cascade.load(cascade_path):
         print('--(!)Error loading object cascade')
@@ -181,7 +174,7 @@ def main():
     try:
         # Read the Input Image
         frame = cv2.imread(sys.argv[2])
-        detectAndDisplay(frame)
+        detectAndDisplay(frame, sys.argv[2])
         cv2.imwrite("detected_"+sys.argv[2], frame)
     except:
         #Run for all images if no second arg

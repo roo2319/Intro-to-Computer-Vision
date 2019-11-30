@@ -155,12 +155,9 @@ def hough(im):
 
 
 
-<<<<<<< HEAD
 def findLines(image): 
     return hough(image)
 
-=======
->>>>>>> 0b1d2c3f30e0fd51a16c597a9ad5e8c66b099d07
 def main():
     image = cv2.imread('dart2.jpg')
     frame_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)

@@ -103,14 +103,16 @@ def hough(image,threshold):
             for r in range(len(hough[0,0])):
                 if hough[i,j,r]<threshold:
                     hough[i,j,r]=0
+    flag=0
     for i in range (len(hough)):
         for j in range (len(hough[0])):
             for k in range (len(hough[0][0])):
                 if (hough[i,j,k]>0):
+                    flag+=1
                     cv2.circle(image,(j,i),k,(255),1)
     cv2.imshow("aaaa", image)
     cv2.waitKey(0)
-    return hough
+    return flag
 
 def findCircles(image): 
     return hough(image,15)
