@@ -69,6 +69,7 @@ def findUnionAndIntersection(detected, groundTruth, percentile):
             if IOU[-1] > percentile:
                 correctDetected.append((xd,yd,wd,hd))
                 correctTruths.append((xt,yt,wt,ht))
+                break
     # Returns the TP objects and the corresponding ground truth
     return correctDetected, correctTruths, IOU
 
@@ -108,8 +109,8 @@ def detectAndDisplay(frame, name):
     refined = []
     for (x, y, width, height) in detected:
 
-        numberOfLines = len(lineswithgradient.findLines(
-            frame_gray[y:y+height, x:x+width]))
+        # numberOfLines = len(lineswithgradient.findLines(
+            # frame_gray[y:y+height, x:x+width]))
         # numberOfEllipses = len(ellipses.detectEllipses(frame_gray[y:y+height,x:x+width]))
         # numberOfEllipses = (ellipses.detectEllipses(frame_gray[fixRange(y-20, 0, len(frame_gray)):fixRange(
         #     y+height+20, 0, len(frame_gray)), fixRange(x-20, 0, len(frame_gray[0])):fixRange(x+height+20, 0, len(frame_gray[0]))]))
@@ -118,7 +119,7 @@ def detectAndDisplay(frame, name):
         #     y+height+20, 0, len(frame_gray)), fixRange(x-20, 0, len(frame_gray[0])):fixRange(x+height+20, 0, len(frame_gray[0]))])
 
         # if numberOfLines >= 4 and (numberOfEllipses > 1 or numberOfCircles > 1):
-        if numberOfLines >= 4:
+        # if numberOfLines >= 4:
             cv2.rectangle(frame, (x, y), (x + width,
                                           y + height), (0, 255, 0), 2)
             refined.append((x,y,width,height))
