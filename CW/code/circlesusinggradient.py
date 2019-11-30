@@ -1,8 +1,10 @@
-import numpy as np
-import cv2
 import math
-import matplotlib.pyplot as plt
+
+import cv2
+import numpy as np
+
 from helpers import sobel
+
 
 #Function to increment array if element exists
 def incIfExists(arr, ind):
@@ -18,7 +20,7 @@ def hough(image,threshold):
     for i in range(len(sobelMagnitude)):
         for j in range(len(sobelMagnitude[0])):
             if sobelMagnitude[i,j]==255:
-                for r in range(20,100):
+                for r in range(10,100):
                     x1=int(j+r*math.cos(sobelAngle[i,j]))
                     x2=int(j-r*math.cos(sobelAngle[i,j]))
                     y1=int(i+r*math.sin(sobelAngle[i,j]))

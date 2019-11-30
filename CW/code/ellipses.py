@@ -1,10 +1,9 @@
-import numpy as np
-import cv2
 import math
 import random
-from scipy import ndimage
-import struct
-import random
+
+import cv2
+import numpy as np
+
 from helpers import sobel
 
 

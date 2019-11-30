@@ -4,9 +4,9 @@ import sys
 import cv2
 import numpy as np
 
-import lineswithgradient
 import circlesusinggradient
 import ellipses
+import lineswithgradient
 
 cascade_name = ""
 cascade = cv2.CascadeClassifier()
@@ -110,9 +110,10 @@ def detectAndDisplay(frame, name):
 
         numberOfLines = len(lineswithgradient.findLines(
             frame_gray[y:y+height, x:x+width]))
+        # numberOfEllipses = len(ellipses.detectEllipses(frame_gray[y:y+height,x:x+width]))
         # numberOfEllipses = (ellipses.detectEllipses(frame_gray[fixRange(y-20, 0, len(frame_gray)):fixRange(
         #     y+height+20, 0, len(frame_gray)), fixRange(x-20, 0, len(frame_gray[0])):fixRange(x+height+20, 0, len(frame_gray[0]))]))
-        numberOfCircles = circlesusinggradient.findCircles(frame_gray[y:y+height,x:x+width])
+        #numberOfCircles = circlesusinggradient.findCircles(frame_gray[y:y+height,x:x+width])
         # numberOfCircles = circlesusinggradient.findCircles(frame_gray[fixRange(y-20, 0, len(frame_gray)):fixRange(
         #     y+height+20, 0, len(frame_gray)), fixRange(x-20, 0, len(frame_gray[0])):fixRange(x+height+20, 0, len(frame_gray[0]))])
 
