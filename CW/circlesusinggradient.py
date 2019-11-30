@@ -78,7 +78,7 @@ def sobel(image):
     magnitude=findMagnitude(alteredImageX,alteredImageY)
     magnitude=np.interp(magnitude, (magnitude.min(), magnitude.max()), (0, 1))
     gradient=findGradient(alteredImageX,alteredImageY)
-    thresholdedImage=thresholdImage(magnitude,0.4)
+    thresholdedImage=thresholdImage(magnitude,0.2)
     cv2.imshow("edgedetectionGradientThresholded",thresholdedImage)
     cv2.waitKey(0)
     return (magnitude,gradient)
@@ -115,10 +115,14 @@ def hough(image,threshold):
     return flag
 
 def findCircles(image): 
+    print(len(image))
+    print(len(image[0]))
+    cv2.imshow("aaa", image)
+    cv2.waitKey(0)
     return hough(image,15)
 
 def main():
-    image = cv2.imread('dart2.jpg')
+    image = cv2.imread('dart1.jpg')
     frame_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     frame_gray = cv2.equalizeHist(frame_gray)
     findCircles(frame_gray)

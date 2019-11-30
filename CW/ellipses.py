@@ -4,12 +4,8 @@ import math
 import random
 from scipy import ndimage
 import struct
-<<<<<<< HEAD
-from skimage import transform
 import random
-=======
 #from skimage import transform
->>>>>>> 0b1d2c3f30e0fd51a16c597a9ad5e8c66b099d07
 
 
 def convolution(xs, ys):
@@ -110,58 +106,6 @@ def putNumberInRange(x, a, b):
 
 def sobel(image):
     image = cv2.medianBlur(image, 5)
-<<<<<<< HEAD
-    kernelX=np.array(([-1,0,1],[-2,0,2],[-1,0,1]))
-    alteredImageX=applyKernel(kernelX,image)
-    kernelY=np.array(([-1,-2,-1],[0,0,0],[1,2,1]))
-    alteredImageY=applyKernel(kernelY,image)
-    magnitude=findMagnitude(alteredImageX,alteredImageY)
-    magnitude=np.interp(magnitude, (magnitude.min(), magnitude.max()), (0, 1))
-    gradient=findGradient(alteredImageX,alteredImageY)
-    thresholdedImage=thresholdImage(magnitude,0.3)
-    cv2.imshow("edgedetectionGradientThresholded",thresholdedImage)
-    cv2.waitKey(0)
-    return (magnitude,gradient)
-
-def houghEllipses(im,minDistance, threshold):
-    pixels=[]
-    for i in range(len(im)):
-        for j in range(len(im[0])):
-            if im[i,j]==255:
-                pixels.append((j,i))
-    pixels=random.sample(pixels,int(len(pixels)/20))
-    validEllipses=[]
-    for (x1,y1) in pixels:
-        # print("outer loop")
-        # print(x1,y1)
-        for (x2,y2) in [p2 for p2 in pixels if p2!= (x1,y1)]:
-            # print("inner loop")
-            # print(x2,y2)
-            if (distance(x1,y1,x2,y2)>minDistance and x1!=x2):
-                accumulator=np.zeros(300)
-                x0=(x1+x2)/2
-                y0=(y1+y2)/2
-                a=distance(x1,y1,x2,y2)/2
-                alpha=math.atan((y2-y1)/(x2-x1))
-                for (x3,y3) in [p3 for p3 in pixels if (p3!= (x1,y1) and p3!= (x2,y2))]:
-                    d=distance(x0,y0,x3,y3)
-                    if (d>minDistance):
-                        cosTao=(a**2 + d**2 - distance(x3,y3,x2,y2)**2)/(2*a*d)
-                        if (a**2 - d**2 * cosTao**2)!=0:
-                            bSquared=(a**2 * d**2 * (1-cosTao**2))/(a**2 - d**2 * cosTao**2)
-                            if bSquared>0:
-                                b=int(math.sqrt(bSquared))
-                                if b<len(accumulator):
-                                    accumulator[b]+=1
-                if (accumulator.max()>=threshold):
-                    print("found")
-                    print(accumulator.max())
-                    validEllipses.append((x0,y0,a,b,alpha))
-                    pixels[:] = [p for p in pixels if (p!=(x1,y1) and p!=(x2,y2) and p!=(x3,y3))]
-                    del accumulator
-                    break
-        # else: 
-=======
     kernelX = np.array(([-1, 0, 1], [-2, 0, 2], [-1, 0, 1]))
     alteredImageX = applyKernel(kernelX, image)
     kernelY = np.array(([-1, -2, -1], [0, 0, 0], [1, 2, 1]))
@@ -186,13 +130,16 @@ def houghEllipses(im, minDistance, threshold):
                 pixels.append((j, i))
     print (len(pixels))
 
+    #Keeps 20% of pixels randomly to reduce runtime
+    pixels=random.sample(pixels, int(len(pixels)/5))
+
     #2. For each pixel, carry out the following
     for p1 in pixels:
 
         # 3. For each other pixel (if distance is more than min distance)
         candidatePixels = [p for p in pixels if distance(
             p, p1) > minDistance and p != p1]
-        print("P1 loop")
+        # print("P1 loop")
         for p2 in candidatePixels:
 
             # 4. Clear the accumulator array
@@ -233,33 +180,17 @@ def houghEllipses(im, minDistance, threshold):
                 print("ellipse found!")
                 break
         
+    return len(validEllipses)
 
-        # else:
->>>>>>> 0b1d2c3f30e0fd51a16c597a9ad5e8c66b099d07
-        #     continue
-        # break
-    return validEllipses
-
-<<<<<<< HEAD
-def main(): 
-    image = cv2.imread('dart1.jpg')
-    frame_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    frame_gray = cv2.equalizeHist(frame_gray)
-    sobelMagnitude, sobelAngle= sobel(frame_gray)
-    ellipses=houghEllipses(sobelMagnitude, 40, 16)
-    # ellipses = transform.hough_ellipse(sobelMagnitude, accuracy=20, threshold=250,
-    #                    min_size=100, max_size=120)
-=======
 def detectEllipses(image):
     sobelMagnitude, sobelAngle = sobel(image)
-    return houghEllipses(sobelMagnitude, 40, 100)
+    return houghEllipses(sobelMagnitude, 40, 40)
 
 def main():
     image = cv2.imread("dart2.jpg")
     frame_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     frame_gray = cv2.equalizeHist(frame_gray)
     ellipses = detectEllipses("dart2.jpg")
->>>>>>> 0b1d2c3f30e0fd51a16c597a9ad5e8c66b099d07
     for (x,y,a,b,alpha) in ellipses:
         cv2.ellipse(image, (int(x),int(y)), (int(a),int(b)), alpha, 365, 0, (200,50,255))
     cv2.imshow("aaaa", image)

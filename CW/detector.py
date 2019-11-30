@@ -7,6 +7,7 @@ import numpy as np
 
 import lineswithgradient
 import circlesusinggradient
+import ellipses
 
 cascade_name = ""
 cascade = cv2.CascadeClassifier()
@@ -108,6 +109,12 @@ def numpyIndex(array, value):
     temp = np.nonzero(array==value)
     return temp[0], temp[1], temp[2]
 
+def fixRange(n, min, max):
+    if n<min:
+        return min
+    if n>max:
+        return max
+    return n
 
 def detectAndDisplay(frame,name):
     # 1. Prepeare the image by turning it grayscale and normalising lighting.
@@ -122,23 +129,13 @@ def detectAndDisplay(frame,name):
     
     # 4. Draw green boxes around the objects found
     for (x, y, width, height) in detected:
-        if len(lineswithgradient.findLines(frame_gray[y:y+height,x:x+width])) >= 4 and circlesusinggradient.findCircles(frame_gray[y:y+height,x:x+width])>1:
+        numberOfLines=len(lineswithgradient.findLines(frame_gray[y:y+height,x:x+width]))
+        numberOfEllipses=(ellipses.detectEllipses(frame_gray[fixRange(y-20,0, len(frame_gray)):fixRange(y+height+20,0, len(frame_gray)),fixRange(x-20,0, len(frame_gray[0])):fixRange(x+height+20,0, len(frame_gray[0]))]))
+        numberOfCircles=circlesusinggradient.findCircles(frame_gray[fixRange(y-20,0, len(frame_gray)):fixRange(y+height+20,0, len(frame_gray)),fixRange(x-20,0, len(frame_gray[0])):fixRange(x+height+20,0, len(frame_gray[0]))])
+        if numberOfLines >= 4 and (numberOfEllipses>1 or numberOfCircles>1):
             cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 255, 0), 2)
-    # # 5. Detect circles 
-    # circlesHough=circlesusinggradient.findCircles(frame_gray)
-    # circlesHough=circlesHough.tolist()
-    # circles=[]
-    # for i in range(len(circlesHough)):
-    #     for j in range(len(circlesHough[0])):
-    #         for k in range(len(circlesHough[0][0])):
-    #             if circlesHough[i][j][k]!=0:
-    #                 circles.append((i,j,k))
-    # circleBoxes=[(c[1],c[0],c[1]-c[2],c[0]-c[2]) for c in circles]
-    # circles=findUnionAndIntersection(detected, circleBoxes, 0.6)[1]
-    # for (x,y,r) in circles:
-    #     if (len(lineswithgradient.findLines(frame_gray[y-r:y+r,x-r:x+r])) >= 6):
-    #         print("dartboard detected by circle")
-    #         cv2.rectangle(frame, (x-r, y-r), (x + r, y + r), (0, 255, 0), 2)
+        else: detected=detected[detected!=(x,y,width,height)]
+        print(numberOfLines, numberOfCircles, numberOfEllipses)
     cascade_name = os.path.basename(os.path.normpath(sys.argv[1]))
     if cascade_name == "frontalface.xml":
         groundTruth = manualFaces
@@ -147,7 +144,7 @@ def detectAndDisplay(frame,name):
         groundTruth = manualDarts
         
     # We want to normalise the filepath, so we can understand all possible references
-    normpath = os.path.basename(os.path.normpath(sys.argv[2]))
+    normpath = os.path.basename(os.path.normpath(name))
     # If we have ground truth for this file
     if (normpath in groundTruth):
         print(normpath)
@@ -156,7 +153,7 @@ def detectAndDisplay(frame,name):
             frame = cv2.rectangle(
                 frame, (x, y), (x + width, y + height), (0, 0, 255), 2)
         # 6. Calculate TPR
-        print(calculateF1andTPR(detected, groundTruth[normpath], 0.6))
+        print(calculateF1andTPR(detected, groundTruth[normpath], 0.5))
     cv2.imshow('Capture - Object detection', frame)
     cv2.waitKey(0)
 

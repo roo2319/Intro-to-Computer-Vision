@@ -94,7 +94,7 @@ def sobel(image):
     magnitude=findMagnitude(alteredImageX,alteredImageY)
     magnitude=np.interp(magnitude, (magnitude.min(), magnitude.max()), (0, 1))
     gradient=findGradient(alteredImageX,alteredImageY)
-    thresholdedImage=thresholdImage(magnitude,0.4)
+    thresholdedImage=thresholdImage(magnitude,0.2)
     cv2.imshow("edgedetectionGradientThresholded",thresholdedImage)
     cv2.waitKey(0)
     return (magnitude,gradient)
@@ -106,7 +106,8 @@ def hough(im):
     houghSpace = np.zeros((2*diagonal, 360))
 
     mag, ang = sobel(im)
-
+    cv2.imshow("aaaaa", mag)
+    cv2.waitKey(0)
     # position in hough space represents location in these lists
     p = range(-diagonal, diagonal)
 
@@ -125,7 +126,7 @@ def hough(im):
     for p_index in range(houghSpace.shape[0]):
         for t_index in range(houghSpace.shape[1]):
             # Hardcoded threshold, Play around (Maybe top 10?)
-            if houghSpace[p_index, t_index] < 20:
+            if houghSpace[p_index, t_index] < 15:
                 houghSpace[p_index, t_index] = 0 
 
     angles = []
@@ -150,7 +151,8 @@ def hough(im):
                 y1 = int(y0 + 1000*(a))
                 x2 = int(x0 - 1000*(-b))
                 y2 = int(y0 - 1000*(a))
-                cv2.line(im, (x1, y1), (x2, y2), (255, 0, 0), 1)
+                # cv2.line(im, (x1, y1), (x2, y2), (255, 0, 0), 1)
+    print(set(map(lambda x: x//10,angles)))
     return set(map(lambda x: x//10,angles))
 
 
