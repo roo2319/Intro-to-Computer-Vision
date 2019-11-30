@@ -17,7 +17,7 @@ def houghEllipses(im, minDistance, threshold):
     pixels = []
     for i in range(len(im)):
         for j in range(len(im[0])):
-            if im[i, j] == 255 and random.randint(1,30) == 2:
+            if im[i, j] == 255 and random.randint(1,10) == 2:
                 pixels.append((j, i))
 
 
@@ -35,7 +35,7 @@ def houghEllipses(im, minDistance, threshold):
 
             # 5. Calculate the *center*, length of major *axis* and *orientation* of the assumed ellipse
 
-            center = ((p1[0]+p2[0])/2, (p1[1]+p2[1]))
+            center = ((p1[0]+p2[0])/2, (p1[1]+p2[1])/2)
             axis = distance(p1, p2)/2
             if p2[0] - p1[0] == 0:
                 break
@@ -60,7 +60,7 @@ def houghEllipses(im, minDistance, threshold):
 
             # 8. If the max is greater than the theshold, then we have an ellipse!
             if (accumulator.max() >= threshold):
-                validEllipses.append(((int(center[0]),int(center[1])), (int(axis), int(maxis)), int(orientation)))
+                validEllipses.append(((int(center[0]),int(center[1])), (int(axis), int(maxis)), int(math.degrees(orientation))))
                 pixels.remove(p1)
                 pixels.remove(p2)
                 pixels.remove(p3)
@@ -71,15 +71,20 @@ def houghEllipses(im, minDistance, threshold):
 
 def detectEllipses(image):
     sobelMagnitude, sobelAngle = sobel(image)
-    ellipses = houghEllipses(sobelMagnitude, 40, 250)
+    cv2.imshow("why ruairi", sobelMagnitude)
+    cv2.waitKey(0)
+    ellipses = houghEllipses(sobelMagnitude, 40, 30)
     return ellipses
 
 def main():
-    image = cv2.imread('../test_images/dart12.jpg')
+    image = cv2.imread('../test_images/ellipse.jpg')
     frame_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    frame_gray = cv2.equalizeHist(frame_gray)
+    # frame_gray = cv2.equalizeHist(frame_gray)
     ellipses = detectEllipses(frame_gray)
     for (center,axis,orientation) in ellipses:
+        print(center)
+        print(axis)
+        print(orientation)
         cv2.ellipse(image, center, axis, orientation, 0, 360, (200,50,255))
     cv2.imshow("Ellipses", image)
     cv2.waitKey(0)
