@@ -58,7 +58,7 @@ def findLines(image):
 def main():
     image = cv2.imread('../test_images/dart2.jpg')
     frame_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    frame_gray = cv2.equalizeHist(frame_gray)
+    # frame_gray = cv2.equalizeHist(frame_gray)
     findLines(frame_gray)
 
 

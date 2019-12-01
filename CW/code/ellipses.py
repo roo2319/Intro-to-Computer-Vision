@@ -12,13 +12,16 @@ def distance(a, b):
 
 
 def houghEllipses(im, minDistance, threshold):
+    print("in ellipses")
     # 1. Store all the edge pixels in a 1D array
     validEllipses = []
     pixels = []
+    im=im[::30]
     for i in range(len(im)):
         for j in range(len(im[0])):
-            if im[i, j] == 255 and random.randint(1,10) == 2:
-                pixels.append((j, i))
+            # if im[i, j] == 255 and random.randint(1,30) == 2:
+            pixels.append((j, i))
+            
 
 
     #2. For each pixel, carry out the following
@@ -57,27 +60,28 @@ def houghEllipses(im, minDistance, threshold):
                             accumulator[maxis] += 1
                 except:
                     continue
-
+            # print(accumulator)
             # 8. If the max is greater than the theshold, then we have an ellipse!
             if (accumulator.max() >= threshold):
+                print("ellipse found!")
                 validEllipses.append(((int(center[0]),int(center[1])), (int(axis), int(maxis)), int(math.degrees(orientation))))
                 pixels.remove(p1)
                 pixels.remove(p2)
                 pixels.remove(p3)
                 del accumulator
                 break
-        
+    
     return validEllipses
 
 def detectEllipses(image):
     sobelMagnitude, sobelAngle = sobel(image)
-    cv2.imshow("why ruairi", sobelMagnitude)
-    cv2.waitKey(0)
-    ellipses = houghEllipses(sobelMagnitude, 40, 30)
+    # cv2.imshow("why ruairi", sobelMagnitude)
+    # cv2.waitKey(0)
+    ellipses = houghEllipses(sobelMagnitude, 30, 8)
     return ellipses
 
 def main():
-    image = cv2.imread('../test_images/ellipse.jpg')
+    image = cv2.imread('../test_images/dart13.jpg')
     frame_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     # frame_gray = cv2.equalizeHist(frame_gray)
     ellipses = detectEllipses(frame_gray)

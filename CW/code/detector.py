@@ -8,6 +8,8 @@ import circlesusinggradient
 import ellipses
 import lineswithgradient
 
+
+
 cascade_name = ""
 cascade = cv2.CascadeClassifier()
 groundTruth = {}
@@ -16,7 +18,6 @@ manualFaces = {
     "dart5.jpg": [(60, 135, 60, 70), (55, 245, 60, 70), (190, 210, 60, 70), (250, 165, 55, 60), (295, 237, 50, 70), (380, 190, 60, 60), (430, 230, 55, 70), (510, 180, 60, 60), (560, 240, 55, 75), (650, 185, 55, 65), (680, 240, 50, 70)],
     "dart13.jpg": [(420, 120, 110, 140)],
     "dart14.jpg": [(470, 215, 80, 100), (735, 190, 90, 100)],
-    "dart15.jpg": [(70, 125, 60, 85), (375, 110, 50, 75), (540, 125, 60, 80)]
 }
 manualDarts = {
     "dart0.jpg": [(444, 15, 150, 177)],
@@ -44,6 +45,10 @@ facesX :: [(x,y,width,height)]
 percentile
 '''
 
+f= open("tprf1.txt","w+")
+f1total=0
+falsepositives=0
+truepositives=0
 
 def findUnionAndIntersection(detected, groundTruth, percentile):
     correctDetected = []
@@ -71,6 +76,10 @@ def findUnionAndIntersection(detected, groundTruth, percentile):
                 correctTruths.append((xt,yt,wt,ht))
                 break
     # Returns the TP objects and the corresponding ground truth
+    global falsepositives
+    falsepositives+=len(detected)-len(correctDetected)
+    global truepositives
+    truepositives+=len(correctDetected)
     return correctDetected, correctTruths, IOU
 
 
@@ -89,18 +98,25 @@ def calculateF1andTPR(detected, groundTruth, percentile):
         f1 = 2*precision*tpr/(precision+tpr)
     else:
         f1 = 0
+    global f1total
+    f1total+=f1
     return f1, tpr
 
-
+def fixRange(n, min, max):
+    if n < min:
+        return min
+    if n > max:
+        return max
+    return n
 
 
 def detectAndDisplay(frame, name):
     # 1. Prepeare the image by turning it grayscale and normalising lighting.
     frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    frame_gray = cv2.equalizeHist(frame_gray)
+    frame_gray_equalised = cv2.equalizeHist(frame_gray)
     # 2. Perform Viola-Jones object detection
     detected = cascade.detectMultiScale(
-        frame_gray, 1.1, 1, 0 | cv2.CASCADE_SCALE_IMAGE, (50, 50), (500, 500))
+        frame_gray_equalised, 1.1, 1, 0 | cv2.CASCADE_SCALE_IMAGE, (50, 50), (500, 500))
     # # 3. Combine rectangles then print number of objects found
     # detected = combineRectangles(detected)
     print(len(detected))
@@ -110,19 +126,18 @@ def detectAndDisplay(frame, name):
     for (x, y, width, height) in detected:
 
         # numberOfLines = len(lineswithgradient.findLines(
-            # frame_gray[y:y+height, x:x+width]))
-        # numberOfEllipses = len(ellipses.detectEllipses(frame_gray[y:y+height,x:x+width]))
-        # numberOfEllipses = (ellipses.detectEllipses(frame_gray[fixRange(y-20, 0, len(frame_gray)):fixRange(
-        #     y+height+20, 0, len(frame_gray)), fixRange(x-20, 0, len(frame_gray[0])):fixRange(x+height+20, 0, len(frame_gray[0]))]))
-        #numberOfCircles = circlesusinggradient.findCircles(frame_gray[y:y+height,x:x+width])
-        # numberOfCircles = circlesusinggradient.findCircles(frame_gray[fixRange(y-20, 0, len(frame_gray)):fixRange(
-        #     y+height+20, 0, len(frame_gray)), fixRange(x-20, 0, len(frame_gray[0])):fixRange(x+height+20, 0, len(frame_gray[0]))])
-
-        # if numberOfLines >= 4 and (numberOfEllipses > 1 or numberOfCircles > 1):
-        # if numberOfLines >= 4:
-            cv2.rectangle(frame, (x, y), (x + width,
-                                          y + height), (0, 255, 0), 2)
-            refined.append((x,y,width,height))
+        #     frame_gray[y:y+height, x:x+width]))
+        # if (numberOfLines>5):
+        #     numberOfEllipses = len(ellipses.detectEllipses(frame_gray[fixRange(y-20, 0, len(frame_gray)):fixRange(
+        #         y+height+20, 0, len(frame_gray)), fixRange(x-20, 0, len(frame_gray[0])):fixRange(x+height+20, 0, len(frame_gray[0]))]))
+        #     numberOfCircles = circlesusinggradient.findCircles(frame_gray[y:y+height,x:x+width])
+        #     numberOfCircles = circlesusinggradient.findCircles(frame_gray[fixRange(y-20, 0, len(frame_gray)):fixRange(
+        #         y+height+20, 0, len(frame_gray)), fixRange(x-20, 0, len(frame_gray[0])):fixRange(x+height+20, 0, len(frame_gray[0]))])
+            if 1:
+            # if numberOfEllipses >= 1 or numberOfCircles>=1:
+                cv2.rectangle(frame, (x, y), (x + width,
+                                            y + height), (0, 255, 0), 2)
+                refined.append((x,y,width,height))
 
         # print(numberOfLines, numberOfCircles, numberOfEllipses)
     cascade_name = os.path.basename(os.path.normpath(sys.argv[1])) 
@@ -142,7 +157,8 @@ def detectAndDisplay(frame, name):
             frame = cv2.rectangle(
                 frame, (x, y), (x + width, y + height), (0, 0, 255), 2)
         # 6. Calculate TPR
-        print(calculateF1andTPR(refined, groundTruth[normpath], 0.5))
+        f.write(str(calculateF1andTPR(refined, groundTruth[normpath], 0.5)))
+    print(len(refined))
     cv2.imshow('Capture - Object detection', frame)
     cv2.waitKey(0)
 
@@ -150,6 +166,7 @@ def detectAndDisplay(frame, name):
 
 
 def main():
+    
     # Read the cascade name
     cascade_path = sys.argv[1]
     # Load the strong classifier
@@ -174,9 +191,13 @@ def main():
         for name in groundTruth.keys():
             frame = cv2.imread("../test_images/"+name)
             detectAndDisplay(frame, name)
-
+    global f1total
+    print(f1total/16)
+    print("false positives:")
+    print(falsepositives)
+    print("true positives:")
+    print(truepositives)
     # Detect objects and display the result
-    # Save result image
     return 0
 
 
