@@ -21,14 +21,9 @@ def houghEllipses(im, minDistance, threshold):
     # im=im[::30]
     for i in range(len(im)):
         for j in range(len(im[0])):
-<<<<<<< Updated upstream
-            if im[i, j] == 255 and random.randint(1, 30) == 2:
-                pixels.append((j, i))
-=======
             if im[i, j] == 255 and random.randint(1,25) == 2:
                 pixels.append((j, i))
             
->>>>>>> Stashed changes
 
     # 2. For each pixel, carry out the following
     for p1 in pixels:
@@ -68,27 +63,14 @@ def houghEllipses(im, minDistance, threshold):
                         continue
             # 8. If the max is greater than the theshold, then we have an ellipse!
             if (accumulator.max() >= threshold):
-<<<<<<< Updated upstream
                 validEllipses.append(((int(center[0]), int(center[1])), (int(
                     axis), int(maxis)), int(math.degrees(orientation))))
-=======
-                validEllipses.append(((int(center[0]),int(center[1])), (int(axis), int(maxis)), int(math.degrees(orientation))))
->>>>>>> Stashed changes
                 pixels.remove(p1)
                 pixels.remove(p2)
                 pixels.remove(p3)
                 del accumulator
                 break
-<<<<<<< Updated upstream
 
-=======
-    # hough_space=np.zeros((length,width))
-    # for e in validEllipses:
-    #     hough_space[e[0][1],e[0][0]]=255
-    # cv2.imwrite("0ellipsespace.png", hough_space)
-    # cv2.imshow("aaaa", hough_space)
-    # cv2.waitKey(0)
->>>>>>> Stashed changes
     return validEllipses
 
 
