@@ -125,8 +125,8 @@ def detectAndDisplay(frame, name):
         numberOfLines = len(lineswithgradient.findLines(
             frame_gray[y:y+height, x:x+width]))
         if (numberOfLines > 5):
-            numberOfEllipses = len(ellipses.detectEllipses(frame_gray[fixRange(y-20, 0, len(frame_gray)):fixRange(
-                y+height+20, 0, len(frame_gray)), fixRange(x-20, 0, len(frame_gray[0])):fixRange(x+height+20, 0, len(frame_gray[0]))]))
+            numberOfEllipses = len(ellipses.detectEllipses(frame_gray[fixRange(y-10, 0, len(frame_gray)):fixRange(
+                y+height+10, 0, len(frame_gray)), fixRange(x-10, 0, len(frame_gray[0])):fixRange(x+height+10, 0, len(frame_gray[0]))]))
 
             if numberOfEllipses >= 1:
                 # if 1:

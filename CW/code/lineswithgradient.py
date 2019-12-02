@@ -25,7 +25,16 @@ def hough(im):
                     p_index = int(x * np.cos(angle) + y *
                                   np.sin(angle)) + diagonal
                     houghSpace[p_index, int(math.degrees(angle)) % 360] += 1
+    for p_index in range(houghSpace.shape[0]):
+        for t_index in range(houghSpace.shape[1]):
+            # Theshold
+            if houghSpace[p_index, t_index] >= 15:
+                houghSpace[p_index, t_index] =255
+            else: houghSpace[p_index, t_index] = 0
 
+    # cv2.imwrite("0linespace.png", houghSpace)
+    # cv2.imshow("hatessss", houghSpace)
+    # cv2.waitKey(0)
     angles = []
     for p_index in range(houghSpace.shape[0]):
         for t_index in range(houghSpace.shape[1]):

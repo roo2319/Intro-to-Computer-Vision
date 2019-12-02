@@ -49,7 +49,7 @@ def sobel(im):
             magnitude[y, x] = math.floor(math.sqrt(dX[y, x]**2+dY[y, x]**2))
             gradient[y, x] = math.atan2(dY[y, x], dX[y, x])
 
-    magnitude = thresholdImage(magnitude, 0.2)
+    magnitude = thresholdImage(magnitude, 0.3)
     return (magnitude, gradient)
 
 
