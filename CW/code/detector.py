@@ -7,17 +7,11 @@ import numpy as np
 import circlesusinggradient
 import ellipses
 import lineswithgradient
+import stage4
 
 
-cascade_name = ""
+cascade_path = "../cascades/cascade.xml"
 cascade = cv2.CascadeClassifier()
-groundTruth = {}
-manualFaces = {
-    "dart4.jpg": [(345, 100, 125, 170)],
-    "dart5.jpg": [(60, 135, 60, 70), (55, 245, 60, 70), (190, 210, 60, 70), (250, 165, 55, 60), (295, 237, 50, 70), (380, 190, 60, 60), (430, 230, 55, 70), (510, 180, 60, 60), (560, 240, 55, 75), (650, 185, 55, 65), (680, 240, 50, 70)],
-    "dart13.jpg": [(420, 120, 110, 140)],
-    "dart14.jpg": [(470, 215, 80, 100), (735, 190, 90, 100)],
-}
 manualDarts = {
     "dart0.jpg": [(444, 15, 150, 177)],
     "dart1.jpg": [(196, 133, 195, 190)],
@@ -50,12 +44,12 @@ falsepositives = 0
 truepositives = 0
 
 
-def findUnionAndIntersection(detected, groundTruth, percentile):
+def findUnionAndIntersection(detected, manualDarts, percentile):
     correctDetected = []
     correctTruths = []
     IOU = []
     detectedSet = set(tuple(i) for i in detected)
-    truthSet = set(tuple(j) for j in groundTruth)
+    truthSet = set(tuple(j) for j in manualDarts)
 
     # Unpack rectangle
     for (xt, yt, wt, ht) in truthSet.symmetric_difference(correctTruths):
@@ -83,12 +77,12 @@ def findUnionAndIntersection(detected, groundTruth, percentile):
     return correctDetected, correctTruths, IOU
 
 
-def calculateF1andTPR(detected, groundTruth, percentile):
-    _, tp, iou = findUnionAndIntersection(detected, groundTruth, percentile)
+def calculateF1andTPR(detected, manualDarts, percentile):
+    _, tp, iou = findUnionAndIntersection(detected, manualDarts, percentile)
 
     print("IOU Values: {}".format(iou))
     # true positive rate is true positives over all valid objects
-    tpr = len(tp)/len(groundTruth)
+    tpr = len(tp)/len(manualDarts)
     # precision is true positives over all detected
     if len(detected) != 0:
         precision = len(tp)/len(detected)
@@ -119,7 +113,7 @@ def detectAndDisplay(frame, name):
     # frame_gray_equalised = cv2.equalizeHist(frame_gray)
     # 2. Perform Viola-Jones object detection
     detected = cascade.detectMultiScale(
-        frame_gray, 1.1, 1, 0 | cv2.CASCADE_SCALE_IMAGE, (50, 50), (500, 500))
+        frame_gray, 1.01, 1, 0 | cv2.CASCADE_SCALE_IMAGE, (50, 50), (500, 500))
     # # 3. Combine rectangles then print number of objects found
     # detected = combineRectangles(detected)
     print("Initial detected: {}".format(len(detected)))
@@ -141,7 +135,7 @@ def detectAndDisplay(frame, name):
                 refined.append((x, y, width, height))
 
     # The best cirlce
-    bonus = circlesusinggradient.findBestCircle(frame_gray)
+    # bonus = circlesusinggradient.findBestCircle(frame_gray)
     # x, y, width, height = bonus
     # print(x,y,width,height)
     # if len(lineswithgradient.findLines(
@@ -150,25 +144,18 @@ def detectAndDisplay(frame, name):
     #                                 y + height), (0, 255, 0), 2)
     #     refined.append((x, y, width, height))
     #     print("Kept bonus")
-        # print(numberOfLines, numberOfCircles, numberOfEllipses)
-    cascade_name = os.path.basename(os.path.normpath(sys.argv[1]))
-    if cascade_name == "frontalface.xml":
-        groundTruth = manualFaces
-    elif cascade_name == "cascade.xml":
-        print("Detecting dartboards")
-        groundTruth = manualDarts
 
     # We want to normalise the filepath, so we can understand all possible references
     normpath = os.path.basename(os.path.normpath(name))
     # If we have ground truth for this file
-    if (normpath in groundTruth):
+    if (normpath in manualDarts):
         print(normpath)
         # 5. Draw red boxes around ground truth
-        for (x, y, width, height) in groundTruth[normpath]:
+        for (x, y, width, height) in manualDarts[normpath]:
             frame = cv2.rectangle(
                 frame, (x, y), (x + width, y + height), (0, 0, 255), 2)
         # 6. Calculate TPR
-        f.write(str(calculateF1andTPR(refined, groundTruth[normpath], 0.5)))
+        f.write(str(calculateF1andTPR(refined, manualDarts[normpath], 0.5)))
     print("Number of detected dartboards: {}".format(len(refined)))
     cv2.imshow('Capture - Object detection', frame)
     cv2.waitKey(0)
@@ -178,8 +165,6 @@ def detectAndDisplay(frame, name):
 
 def main():
 
-    # Read the cascade name
-    cascade_path = sys.argv[1]
     # Load the strong classifier
     if not cascade.load(cascade_path):
         print('--(!)Error loading object cascade')
@@ -187,19 +172,13 @@ def main():
 
     try:
         # Read the Input Image
-        frame = cv2.imread(sys.argv[2])
-        detectAndDisplay(frame, sys.argv[2])
-        cv2.imwrite("detected_"+sys.argv[2], frame)
+        frame = cv2.imread(sys.argv[1])
+        detectAndDisplay(frame, sys.argv[1])
+        cv2.imwrite("detected_"+sys.argv[1], frame)
     except:
         # Run for all images if no second arg
         print("Running on all images")
-        cascade_name = os.path.basename(os.path.normpath(sys.argv[1]))
-        if cascade_name == "frontalface.xml":
-            groundTruth = manualFaces
-        elif cascade_name == "cascade.xml":
-            print("Detecting dartboards")
-            groundTruth = manualDarts
-        for name in groundTruth.keys():
+        for name in manualDarts.keys():
             frame = cv2.imread("../test_images/"+name)
             detectAndDisplay(frame, name)
     global f1total

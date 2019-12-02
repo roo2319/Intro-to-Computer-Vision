@@ -31,6 +31,12 @@ def hough(image):
                     incIfExists(hough,(y1,x2,r))
                     incIfExists(hough,(y2,x1,r))
                     incIfExists(hough,(y2,x2,r))
+    for y in range(len(hough)):
+        for x in range(len(hough[0])):
+            for r in range(len(hough[0,0])):
+                if hough[y,x,r] < 10:
+                    hough[y,x,r] = 0
+                
     return hough
 
 
@@ -40,7 +46,7 @@ def findCircles(image):
     for y in range(len(houghs)):
         for x in range(len(houghs[0])):
             for r in range(len(houghs[0,0])):
-                if houghs[y,x,r] > 30:
+                if houghs[y,x,r] != 0:
                     circleCount+=1
     # cv2.imshow("circles",image)
     # cv2.waitKey(0)
@@ -48,13 +54,13 @@ def findCircles(image):
 
 def findBestCircle(image):
     houghs = hough(image)
-    print(np.count_nonzero(houghs,axis=2))
-    # y,x,r = np.unravel_index(np.argmax(houghs, axis=None), houghs.shape)
-    # while y-r<0 or x-r<0 or x+r>len(houghs[0]) or y+r>len(houghs):
-    #     houghs[y,x,r] = 0
-    #     y,x,r = np.unravel_index(np.argmax(houghs, axis=None), houghs.shape)
-    y,x = np.unravel_index(np.argmax(np.sum(houghs,axis=2)),houghs.shape[:2])
-    r = np.argmax(houghs[y,x])
+    y,x,r = np.unravel_index(np.argmax(houghs, axis=None), houghs.shape)
+    while y-r<0 or x-r<0 or x+r>len(houghs[0]) or y+r>len(houghs):
+        houghs[y,x,r] = 0
+        y,x,r = np.unravel_index(np.argmax(houghs, axis=None), houghs.shape)
+    # y,x = np.unravel_index(np.argmax(np.sum(houghs,axis=2)),houghs.shape[:2])
+    # print(houghs[y,x])
+    # r = np.argmax(houghs[y,x])
     cv2.circle(image,(x,y),r,0,2)
     cv2.imshow("a",image)
     cv2.waitKey(0)

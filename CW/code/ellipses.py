@@ -16,11 +16,11 @@ def houghEllipses(im, minDistance, threshold):
     # 1. Store all the edge pixels in a 1D array
     validEllipses = []
     pixels = []
-    im=im[::30]
+    # im=im[::30]
     for i in range(len(im)):
         for j in range(len(im[0])):
-            # if im[i, j] == 255 and random.randint(1,30) == 2:
-            pixels.append((j, i))
+            if im[i, j] == 255 and random.randint(1,30) == 2:
+                pixels.append((j, i))
             
 
 
