@@ -21,9 +21,11 @@ def convolution(im, kernel):
     kernel = np.flipud(np.fliplr(kernel))
     return cv2.filter2D(im, -1, kernel, anchor=(-1, -1))
 
+
 '''
  Assume incoming image is grayscale
 '''
+
 
 def sobel(im):
     # Approximate derivatives with a sobel kernel

@@ -19,12 +19,10 @@ def houghEllipses(im, minDistance, threshold):
     # im=im[::30]
     for i in range(len(im)):
         for j in range(len(im[0])):
-            if im[i, j] == 255 and random.randint(1,30) == 2:
+            if im[i, j] == 255 and random.randint(1, 30) == 2:
                 pixels.append((j, i))
-            
 
-
-    #2. For each pixel, carry out the following
+    # 2. For each pixel, carry out the following
     for p1 in pixels:
 
         # 3. For each other pixel (if distance is more than min distance)
@@ -63,14 +61,16 @@ def houghEllipses(im, minDistance, threshold):
             # print(accumulator)
             # 8. If the max is greater than the theshold, then we have an ellipse!
             if (accumulator.max() >= threshold):
-                validEllipses.append(((int(center[0]),int(center[1])), (int(axis), int(maxis)), int(math.degrees(orientation))))
+                validEllipses.append(((int(center[0]), int(center[1])), (int(
+                    axis), int(maxis)), int(math.degrees(orientation))))
                 pixels.remove(p1)
                 pixels.remove(p2)
                 pixels.remove(p3)
                 del accumulator
                 break
-    
+
     return validEllipses
+
 
 def detectEllipses(image):
     sobelMagnitude, sobelAngle = sobel(image)
@@ -79,18 +79,20 @@ def detectEllipses(image):
     ellipses = houghEllipses(sobelMagnitude, 30, 8)
     return ellipses
 
+
 def main():
     image = cv2.imread('../test_images/dart13.jpg')
     frame_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     # frame_gray = cv2.equalizeHist(frame_gray)
     ellipses = detectEllipses(frame_gray)
-    for (center,axis,orientation) in ellipses:
+    for (center, axis, orientation) in ellipses:
         print(center)
         print(axis)
         print(orientation)
-        cv2.ellipse(image, center, axis, orientation, 0, 360, (200,50,255))
+        cv2.ellipse(image, center, axis, orientation, 0, 360, (200, 50, 255))
     cv2.imshow("Ellipses", image)
     cv2.waitKey(0)
+
 
 if __name__ == "__main__":
     main()

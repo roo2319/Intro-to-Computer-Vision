@@ -5,7 +5,6 @@ import cv2
 import numpy as np
 
 
-
 cascade_path = "frontalface.xml"
 cascade = cv2.CascadeClassifier()
 manualFaces = {
@@ -21,9 +20,6 @@ Calculates intersection over union of the two rectangles and, if it is above a c
 facesX :: [(x,y,width,height)]
 percentile
 '''
-
-
-
 
 
 def fixRange(n, min, max):
@@ -45,9 +41,9 @@ def detectAndDisplay(frame, name):
     # detected = combineRectangles(detected)
 
     # 4. Draw green boxes around the objects found
-    for (x,y,width,height) in detected:
+    for (x, y, width, height) in detected:
         cv2.rectangle(frame, (x, y), (x + width,
-                                              y + height), (0, 255, 0), 2)
+                                      y + height), (0, 255, 0), 2)
     # We want to normalise the filepath, so we can understand all possible references
     normpath = os.path.basename(os.path.normpath(name))
     # If we have ground truth for this file

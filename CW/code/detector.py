@@ -127,9 +127,9 @@ def detectAndDisplay(frame, name):
         if (numberOfLines > 5):
             numberOfEllipses = len(ellipses.detectEllipses(frame_gray[fixRange(y-20, 0, len(frame_gray)):fixRange(
                 y+height+20, 0, len(frame_gray)), fixRange(x-20, 0, len(frame_gray[0])):fixRange(x+height+20, 0, len(frame_gray[0]))]))
-            
+
             if numberOfEllipses >= 1:
-            # if 1:
+                # if 1:
                 cv2.rectangle(frame, (x, y), (x + width,
                                               y + height), (0, 255, 0), 2)
                 refined.append((x, y, width, height))
