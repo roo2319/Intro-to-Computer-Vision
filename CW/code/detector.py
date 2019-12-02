@@ -98,6 +98,7 @@ def calculateF1andTPR(detected, groundTruth, percentile):
         f1 = 2*precision*tpr/(precision+tpr)
     else:
         f1 = 0
+    print(tpr)
     global f1total
     f1total+=f1
     return f1, tpr
@@ -120,21 +121,18 @@ def detectAndDisplay(frame, name):
     # # 3. Combine rectangles then print number of objects found
     # detected = combineRectangles(detected)
     print(len(detected))
+    
 
     # 4. Draw green boxes around the objects found
     refined = []
     for (x, y, width, height) in detected:
 
-        # numberOfLines = len(lineswithgradient.findLines(
-        #     frame_gray[y:y+height, x:x+width]))
-        # if (numberOfLines>5):
-        #     numberOfEllipses = len(ellipses.detectEllipses(frame_gray[fixRange(y-20, 0, len(frame_gray)):fixRange(
-        #         y+height+20, 0, len(frame_gray)), fixRange(x-20, 0, len(frame_gray[0])):fixRange(x+height+20, 0, len(frame_gray[0]))]))
-        #     numberOfCircles = circlesusinggradient.findCircles(frame_gray[y:y+height,x:x+width])
-        #     numberOfCircles = circlesusinggradient.findCircles(frame_gray[fixRange(y-20, 0, len(frame_gray)):fixRange(
-        #         y+height+20, 0, len(frame_gray)), fixRange(x-20, 0, len(frame_gray[0])):fixRange(x+height+20, 0, len(frame_gray[0]))])
-            if 1:
-            # if numberOfEllipses >= 1 or numberOfCircles>=1:
+        numberOfLines = len(lineswithgradient.findLines(
+            frame_gray[y:y+height, x:x+width]))
+        if (numberOfLines>5):
+            numberOfEllipses = len(ellipses.detectEllipses(frame_gray[fixRange(y-20, 0, len(frame_gray)):fixRange(
+                y+height+20, 0, len(frame_gray)), fixRange(x-20, 0, len(frame_gray[0])):fixRange(x+height+20, 0, len(frame_gray[0]))]))
+            if numberOfEllipses >= 1:
                 cv2.rectangle(frame, (x, y), (x + width,
                                             y + height), (0, 255, 0), 2)
                 refined.append((x,y,width,height))
