@@ -9,7 +9,6 @@ import ellipses
 import lineswithgradient
 
 
-
 cascade_name = ""
 cascade = cv2.CascadeClassifier()
 groundTruth = {}
@@ -31,7 +30,7 @@ manualDarts = {
     "dart8.jpg": [(842, 217, 115, 121), (62, 253, 62, 87)],
     "dart9.jpg": [(199, 49, 232, 232)],
     "dart10.jpg": [(92, 105, 95, 108), (584, 128, 55, 82), (917, 151, 34, 62)],
-    "dart11.jpg": [(176, 104, 55, 74), (215, 254, 15, 20)],
+    "dart11.jpg": [(176, 104, 55, 74)],
     "dart12.jpg": [(156, 78, 60, 135)],
     "dart13.jpg": [(272, 122, 131, 130)],
     "dart14.jpg": [(121, 101, 124, 126), (989, 96, 122, 124)],
@@ -45,10 +44,11 @@ facesX :: [(x,y,width,height)]
 percentile
 '''
 
-f= open("tprf1.txt","w+")
-f1total=0
-falsepositives=0
-truepositives=0
+f = open("tprf1.txt", "w+")
+f1total = 0
+falsepositives = 0
+truepositives = 0
+
 
 def findUnionAndIntersection(detected, groundTruth, percentile):
     correctDetected = []
@@ -56,10 +56,10 @@ def findUnionAndIntersection(detected, groundTruth, percentile):
     IOU = []
     detectedSet = set(tuple(i) for i in detected)
     truthSet = set(tuple(j) for j in groundTruth)
-    
+
     # Unpack rectangle
-    for (xt,yt,wt,ht) in truthSet.symmetric_difference(correctTruths):
-        for (xd,yd,wd,hd) in detectedSet.symmetric_difference(correctDetected):
+    for (xt, yt, wt, ht) in truthSet.symmetric_difference(correctTruths):
+        for (xd, yd, wd, hd) in detectedSet.symmetric_difference(correctDetected):
             intersectingPixelsCount = 0
             detectedSize = wd*hd
             trueSize = wt*ht
@@ -72,21 +72,21 @@ def findUnionAndIntersection(detected, groundTruth, percentile):
                        (detectedSize+trueSize-intersectingPixelsCount))
 
             if IOU[-1] > percentile:
-                correctDetected.append((xd,yd,wd,hd))
-                correctTruths.append((xt,yt,wt,ht))
+                correctDetected.append((xd, yd, wd, hd))
+                correctTruths.append((xt, yt, wt, ht))
                 break
     # Returns the TP objects and the corresponding ground truth
     global falsepositives
-    falsepositives+=len(detected)-len(correctDetected)
+    falsepositives += len(detected)-len(correctDetected)
     global truepositives
-    truepositives+=len(correctDetected)
+    truepositives += len(correctDetected)
     return correctDetected, correctTruths, IOU
 
 
 def calculateF1andTPR(detected, groundTruth, percentile):
     _, tp, iou = findUnionAndIntersection(detected, groundTruth, percentile)
 
-    print(iou)
+    print("IOU Values: {}".format(iou))
     # true positive rate is true positives over all valid objects
     tpr = len(tp)/len(groundTruth)
     # precision is true positives over all detected
@@ -100,8 +100,10 @@ def calculateF1andTPR(detected, groundTruth, percentile):
         f1 = 0
     print(tpr)
     global f1total
-    f1total+=f1
+    f1total += f1
+    print("F1: {}, TPR: {}".format(f1, tpr))
     return f1, tpr
+
 
 def fixRange(n, min, max):
     if n < min:
@@ -114,14 +116,13 @@ def fixRange(n, min, max):
 def detectAndDisplay(frame, name):
     # 1. Prepeare the image by turning it grayscale and normalising lighting.
     frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    frame_gray_equalised = cv2.equalizeHist(frame_gray)
+    # frame_gray_equalised = cv2.equalizeHist(frame_gray)
     # 2. Perform Viola-Jones object detection
     detected = cascade.detectMultiScale(
-        frame_gray_equalised, 1.1, 1, 0 | cv2.CASCADE_SCALE_IMAGE, (50, 50), (500, 500))
+        frame_gray, 1.1, 1, 0 | cv2.CASCADE_SCALE_IMAGE, (50, 50), (500, 500))
     # # 3. Combine rectangles then print number of objects found
     # detected = combineRectangles(detected)
-    print(len(detected))
-    
+    print("Initial detected: {}".format(len(detected)))
 
     # 4. Draw green boxes around the objects found
     refined = []
@@ -129,16 +130,28 @@ def detectAndDisplay(frame, name):
 
         numberOfLines = len(lineswithgradient.findLines(
             frame_gray[y:y+height, x:x+width]))
-        if (numberOfLines>5):
+        if (numberOfLines > 5):
             numberOfEllipses = len(ellipses.detectEllipses(frame_gray[fixRange(y-20, 0, len(frame_gray)):fixRange(
                 y+height+20, 0, len(frame_gray)), fixRange(x-20, 0, len(frame_gray[0])):fixRange(x+height+20, 0, len(frame_gray[0]))]))
+            
             if numberOfEllipses >= 1:
+            # if 1:
                 cv2.rectangle(frame, (x, y), (x + width,
-                                            y + height), (0, 255, 0), 2)
-                refined.append((x,y,width,height))
+                                              y + height), (0, 255, 0), 2)
+                refined.append((x, y, width, height))
 
+    # The best cirlce
+    bonus = circlesusinggradient.findBestCircle(frame_gray)
+    # x, y, width, height = bonus
+    # print(x,y,width,height)
+    # if len(lineswithgradient.findLines(
+    #         frame_gray[y:y+height, x:x+width])) > 5:
+    #     cv2.rectangle(frame, (x, y), (x + width,
+    #                                 y + height), (0, 255, 0), 2)
+    #     refined.append((x, y, width, height))
+    #     print("Kept bonus")
         # print(numberOfLines, numberOfCircles, numberOfEllipses)
-    cascade_name = os.path.basename(os.path.normpath(sys.argv[1])) 
+    cascade_name = os.path.basename(os.path.normpath(sys.argv[1]))
     if cascade_name == "frontalface.xml":
         groundTruth = manualFaces
     elif cascade_name == "cascade.xml":
@@ -156,7 +169,7 @@ def detectAndDisplay(frame, name):
                 frame, (x, y), (x + width, y + height), (0, 0, 255), 2)
         # 6. Calculate TPR
         f.write(str(calculateF1andTPR(refined, groundTruth[normpath], 0.5)))
-    print(len(refined))
+    print("Number of detected dartboards: {}".format(len(refined)))
     cv2.imshow('Capture - Object detection', frame)
     cv2.waitKey(0)
 
@@ -164,7 +177,7 @@ def detectAndDisplay(frame, name):
 
 
 def main():
-    
+
     # Read the cascade name
     cascade_path = sys.argv[1]
     # Load the strong classifier

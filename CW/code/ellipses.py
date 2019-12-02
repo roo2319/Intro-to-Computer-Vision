@@ -63,7 +63,6 @@ def houghEllipses(im, minDistance, threshold):
             # print(accumulator)
             # 8. If the max is greater than the theshold, then we have an ellipse!
             if (accumulator.max() >= threshold):
-                print("ellipse found!")
                 validEllipses.append(((int(center[0]),int(center[1])), (int(axis), int(maxis)), int(math.degrees(orientation))))
                 pixels.remove(p1)
                 pixels.remove(p2)
